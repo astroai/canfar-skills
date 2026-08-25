@@ -1,0 +1,120 @@
+{
+  "name": "canfar-skills",
+  "version": "0.1.0",
+  "description": "CANFAR Science Platform skills for AstroAI agents.",
+  "skills": [
+    {
+      "id": "canfar-platform",
+      "path": "skills/canfar-platform",
+      "title": "CANFAR platform router",
+      "summary": "Plain-language intent router for all CANFAR topics.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-architecture",
+      "path": "skills/canfar-architecture",
+      "title": "Architecture",
+      "summary": "Portal, Skaha, K8s, storage tiers.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-sessions",
+      "path": "skills/canfar-sessions",
+      "title": "Sessions",
+      "summary": "Session types, lifecycle, AstroAI images.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-storage",
+      "path": "skills/canfar-storage",
+      "title": "Storage",
+      "summary": "Scratch, ARC, WORK, persistence.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-vospace",
+      "path": "skills/canfar-vospace",
+      "title": "VOSpace",
+      "summary": "Vault, vos URIs, vcp/vls.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-quotas",
+      "path": "skills/canfar-quotas",
+      "title": "Quotas",
+      "summary": "Home, project, vault quotas.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-permissions",
+      "path": "skills/canfar-permissions",
+      "title": "Permissions",
+      "summary": "Groups, ACLs, allocations.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-limits",
+      "path": "skills/canfar-limits",
+      "title": "Limits",
+      "summary": "cgroup, CPU/RAM/GPU, scratch.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-cvmfs",
+      "path": "skills/canfar-cvmfs",
+      "title": "CVMFS",
+      "summary": "Alliance software at /cvmfs.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-concurrency",
+      "path": "skills/canfar-concurrency",
+      "title": "Concurrency",
+      "summary": "Shared /arc/home, locks.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-cli",
+      "path": "skills/canfar-cli",
+      "title": "CANFAR CLI",
+      "summary": "canfar login/create/ps/data.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-troubleshooting",
+      "path": "skills/canfar-troubleshooting",
+      "title": "Troubleshooting",
+      "summary": "Common failures.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-ray",
+      "path": "skills/canfar-ray",
+      "title": "Ray compute",
+      "summary": "Ray cluster and jobs via astroai.",
+      "category": "platform"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "canfar-platform",
+      "title": "CANFAR Platform Companion",
+      "summary": "Sessions, storage, quotas, and permissions \u2014 students ask in plain language.",
+      "includes": [
+        "canfar-platform",
+        "canfar-architecture",
+        "canfar-sessions",
+        "canfar-storage",
+        "canfar-vospace",
+        "canfar-quotas",
+        "canfar-permissions",
+        "canfar-limits",
+        "canfar-cvmfs",
+        "canfar-concurrency",
+        "canfar-cli",
+        "canfar-troubleshooting",
+        "canfar-ray"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "canfar-skills",
+  "version": "0.1.0",
+  "description": "CANFAR Science Platform skills for AstroAI agents — sessions, storage, quotas, permissions.",
+  "author": { "name": "AstroAI" },
+  "homepage": "https://github.com/astroai/canfar-skills",
+  "repository": "https://github.com/astroai/canfar-skills",
+  "license": "Apache-2.0",
+  "keywords": ["canfar", "cadc", "astroai", "science-platform", "storage", "sessions"]
+}
