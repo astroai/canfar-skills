@@ -2,69 +2,85 @@
 name: canfar-architecture
 description: >
   CANFAR platform architecture: Science Portal, Skaha session manager,
-  Kubernetes, Harbor registry, CADC authentication, ARC/Cavern storage, VOSpace
-  vault, scratch SSDs, session types (notebook, contributed, headless, batch).
-  Use when explaining how CANFAR works, AstroAI vs CANFAR naming, or what
-  Skaha/Harbor/ARC mean.
+  Kubernetes, Harbor registry, CADC authentication, group management, ARC/Cavern
+  storage, VOSpace vault, scratch SSDs, batch and headless jobs. Use when
+  explaining how CANFAR works, what Skaha/Harbor/ARC mean, or platform vs
+  AstroAI tooling.
 ---
 # CANFAR architecture
 
-## Names (AstroAI sessions)
+Docs: [Platform overview](https://opencadc.github.io/canfar/latest/)
 
-| Name | What |
+## Core components
+
+| Name | Role |
 | --- | --- |
-| **CANFAR** | Science Platform — portal, Skaha, `/arc`, auth |
-| **Skaha** | Session manager (K8s jobs for notebooks, webterm, Ray, …) |
-| **CADC** | Identity + archives (`canfar login`, `cadcget`) |
-| **astroai** | In-session CLI — env, Ray, agents, `status` |
-| **canfar** | Platform CLI — sessions, auth, `canfar data` |
+| **CANFAR** | Science Platform — portal, sessions, storage, auth |
+| **Science Portal** | Web UI (hostname varies by deployment) |
+| **Skaha** | Session scheduler (K8s jobs: notebook, desktop, batch, …) |
+| **Harbor** | Container registry (default CADC: `images.canfar.net`) |
+| **CADC** | Canadian Astronomy Data Centre — identity + archives |
+| **Group management** | CADC Group Management Portal — team membership (`canfar-groups`) |
+| **VOSpace** | Object storage API (Vault + ARC views) |
 
-## Component stack
+## Request flow
 
 ```text
-Scientist → Science Portal (canfar.net)
-         → CADC auth
-         → Skaha (session scheduler)
-         → Kubernetes pods (container images from Harbor)
-         → Storage mounts: /arc, /scratch, /cvmfs
-         → VOSpace (vault + arc APIs) for object I/O
+User → Science Portal / canfar CLI
+    → Authentication (canfar-auth) — CADC x509 or SRCNet OIDC
+    → Skaha schedules K8s pod
+    → Container from Harbor image (registryHosts deployer-configurable)
+    → Mounts: /arc (or cavern), /scratch, optionally /cvmfs
+    → VOSpace APIs for vos: URIs
 ```
 
 ## Session types (Skaha)
 
 | Type | Examples | Interactive |
 | --- | --- | --- |
-| **Notebook** | JupyterLab `:8888` | Yes |
-| **Contributed** | webterm, vscode, marimo, openresearch, ray-manager `:5000` | Yes |
-| **Headless** | ray-worker, batch, improc batch | No |
-| **Batch** | Scheduled jobs | No |
+| **Notebook** | JupyterLab | Yes |
+| **Desktop** | Linux GUI, CASA | Yes |
+| **CARTA / Firefly** | Domain viewers | Yes |
+| **Contributed** | Community web apps | Yes |
+| **Headless / Batch** | Parallel replicas | No |
 
-AstroAI images live in Harbor project **`astroai`**
-(`images.canfar.net/astroai/*`).
+Detail: `canfar-sessions`, `canfar-batch`.
 
-## Storage tiers (summary)
+## Storage tiers
 
-| Tier | Path | Backing |
-| --- | --- | --- |
-| Scratch | `/scratch` | Local SSD, session pod |
-| ARC home | `/arc/home/<user>` | CephFS POSIX (~10 GB default) |
-| ARC projects | `/arc/projects/<group>` | CephFS POSIX, team quota |
-| Vault VOSpace | `vos:`, web UI | Object store, geo-redundant |
-| CVMFS | `/cvmfs/soft.computecanada.ca` | Read-only software |
+| Tier | Path | Backing | Shared? |
+| --- | --- | --- | --- |
+| Scratch | `/scratch` | Pod-local SSD (emptyDir) | No (session) |
+| ARC home | `/arc/home/<user>` | CephFS (~10 GB CADC default) | Your sessions |
+| ARC projects | `/arc/projects/<group>` | CephFS, team quota | Group |
+| Vault | `vos:`, web UI | Object store | ACL-based |
+| CVMFS | `/cvmfs/soft.computecanada.ca` | Read-only software | When cluster mounts it |
 
-Scratch is **fast and private** to one session. ARC is **shared and
-persistent**. Vault is for **long-term archive and public sharing**.
+Scratch = fast, ephemeral. ARC = POSIX collaboration. Vault = archive + public URLs.
 
-## AstroAI-specific layout
+## Tooling layers
 
-On CANFAR AstroAI images:
+| Tool | Scope |
+| --- | --- |
+| `canfar` | Platform: auth, sessions, data staging |
+| `vcp` / `vls` | VOSpace I/O |
+| `cadcget` / TAP | CADC **archives** (not your vos space) |
+| **`astroai`** | **AstroAI images only** — env, agents, Ray |
 
-- `$WORK` = `$SCRATCH/src` — code and pixi/uv projects (survives container OOM)
-- `$SCRATCH` — data, caches, agent CLIs (`ASTROAI_LAB_BIN_DIR`)
-- `$HOME` = `/arc/home/<you>` — small persistent config only
+Do not conflate `canfar ps` (all your sessions) with in-session monitors.
+
+## AstroAI on CANFAR (optional)
+
+Some sites ship AstroAI Harbor images (`images.canfar.net/astroai/*`):
+
+- `$WORK` = `$SCRATCH/src` — project code (survives container OOM)
+- `$SCRATCH` — per-session data and agent runtimes
+- `$HOME` = `/arc/home/<you>` — small persistent config
+
+See `canfar-concurrency`, `astroai-ray`.
 
 ## Agent rules
 
-1. Point users to [opencadc.github.io/canfar](https://opencadc.github.io/canfar/) for platform-wide detail.
-2. For AstroAI daily commands, `astroai-lab-workflow` skill complements this.
-3. Do not conflate `astroai status` (this session) with `canfar ps` (all sessions).
+1. Official detail: [opencadc.github.io/canfar](https://opencadc.github.io/canfar/)
+2. Collaboration = **groups + project allocations**, not shared scratch.
+3. Archives (CFHT, Gemini, …) ≠ user VOSpace — route to `canfar-cadc-data`.

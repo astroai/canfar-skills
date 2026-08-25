@@ -1,51 +1,56 @@
 ---
 name: canfar-concurrency
 description: >
-  CANFAR shared /arc/home between sessions, scratch per session, astroai agent
-  setup locks, Ray control lock, agent runtime symlinks to scratch, SQLite on
-  NFS, safe concurrent commands. Use when two sessions open, agent verify
-  conflicts, or chat history location.
+  CANFAR shared /arc/home between sessions, scratch per session, file locking
+  on NFS, SQLite pitfalls, AstroAI agent setup locks and Ray control lock.
+  Use when two sessions open, concurrent writes, or where chat history lives.
 ---
 # Concurrency & shared home
 
 ## Two sessions, one home
 
+Every **interactive** session mounts the **same** `/arc/home/<user>`.
+Each session has its **own** `/scratch` — never shared.
+
 | State | Location | Concurrent? |
 | --- | --- | --- |
-| Agent configs (MCP, skills, settings) | `/arc/home` | Read-mostly OK |
-| Auth (`canfar`, `gh`) | `/arc/home` | Shared — good |
-| Env saves (`~/.astroai/lab`) | `/arc/home` | Use locks |
-| Ray control (`~/.astroai/ray`) | `/arc/home` | **One writer** (lock) |
-| Agent runtimes (transcripts, DBs) | **Symlink → scratch** | Per-session |
-| Caches, envs, CLIs | `$SCRATCH` | Per-session |
+| Config, SSH keys, `~/.canfar` | `/arc/home` | Read-mostly OK |
+| Active datasets | `/arc/projects/<group>` | Group POSIX — coordinate |
+| Temp I/O | `/scratch` | **Per session only** |
+| Vault releases | `vos:…` | ACL-controlled |
 
-Each session has **its own** `$SCRATCH` — never shared.
+**Rule:** teammates share via `/arc/projects` or VOSpace — not `/scratch`.
 
-## Locks (astroai)
+## NFS / CephFS cautions
 
-| Domain | Lock file | Timeout |
+- Avoid heavy **SQLite** or lock-heavy apps directly on `/arc/home` — use scratch or project paths with care.
+- Use atomic writes (write temp + rename) for config files.
+- Large parallel writes to one directory can slow everyone — spread outputs.
+
+## AstroAI images (optional)
+
+| State | Location | Notes |
+| --- | --- | --- |
+| Agent configs (MCP, skills) | `/arc/home` | Shared |
+| Ray control | `~/.astroai/ray` | **One writer** (lock) |
+| Agent runtimes (transcripts) | Symlink → scratch | Per-session |
+
+Locks:
+
+| Domain | Lock | Timeout |
 | --- | --- | --- |
 | Agent setup/plugins/verify | `~/.astroai/lab/agent-setup.lock` | 30 s |
 | Ray cluster start/stop | `~/.astroai/ray/control.lock` | 120 s |
 
-Stale lock (dead PID) auto-clears. If blocked: finish the other session's command or wait.
-
-**Safe concurrently:** `astroai status`, `cluster status`, `env export`, reads.
+**Safe concurrently:** `astroai status`, reads, `canfar ps`.
 
 **Serialize:** `agent setup`, `plugins install`, `verify --fix`, `cluster start`.
 
-## Agent runtime relocation
-
-`astroai agent setup` moves heavy agent stores (e.g. `~/.claude/projects`) to
-scratch via symlinks so **SQLite on NFS does not corrupt**.
-
-- Chat history on scratch **dies with the session**
-- Configs/skills on `/arc/home` **persist**
-
-Dirs >200 MB left in place — `verify --fix` reports them.
+`agent setup` symlinks heavy agent stores to scratch so SQLite on NFS does not corrupt.
+Chat history on scratch **dies with the session**; configs on `/arc/home` **persist**.
 
 ## Agent rules
 
-1. Tell users: two webterms = two scratches; share via `/arc/projects`.
-2. Do not run `verify --fix` in parallel in two sessions without expecting a lock message.
-3. Atomic config writes — never edit JSON MCP files by partial overwrite.
+1. Two sessions = two scratches; share via `/arc/projects` or `vcp`.
+2. Permission denied on project file → group membership (`canfar-groups`), not "wrong session".
+3. Do not run parallel `verify --fix` in two AstroAI sessions without expecting lock messages.

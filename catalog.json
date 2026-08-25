@@ -1,7 +1,7 @@
 {
   "name": "canfar-skills",
-  "version": "0.1.0",
-  "description": "CANFAR Science Platform skills for AstroAI agents.",
+  "version": "0.2.0",
+  "description": "CANFAR Science Platform skills for agents — all deployments, plain-language routing.",
   "skills": [
     {
       "id": "canfar-platform",
@@ -11,86 +11,156 @@
       "category": "platform"
     },
     {
+      "id": "canfar-getting-started",
+      "path": "skills/canfar-getting-started",
+      "title": "Getting started",
+      "summary": "Account, CADC/SRCNet access, first session, support.",
+      "category": "platform"
+    },
+    {
       "id": "canfar-architecture",
       "path": "skills/canfar-architecture",
       "title": "Architecture",
-      "summary": "Portal, Skaha, K8s, storage tiers.",
+      "summary": "Portal, Skaha, K8s, storage tiers, tooling layers.",
       "category": "platform"
     },
     {
       "id": "canfar-sessions",
       "path": "skills/canfar-sessions",
       "title": "Sessions",
-      "summary": "Session types, lifecycle, AstroAI images.",
+      "summary": "Notebook, desktop, CARTA, Firefly, contributed, lifecycle.",
       "category": "platform"
     },
     {
       "id": "canfar-storage",
       "path": "skills/canfar-storage",
       "title": "Storage",
-      "summary": "Scratch, ARC, WORK, persistence.",
+      "summary": "Scratch, ARC home/projects, layout, SSHFS.",
       "category": "platform"
     },
     {
       "id": "canfar-vospace",
       "path": "skills/canfar-vospace",
       "title": "VOSpace",
-      "summary": "Vault, vos URIs, vcp/vls.",
+      "summary": "Vault, vos URIs, vcp/vls, sharing, publication.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-transfers",
+      "path": "skills/canfar-transfers",
+      "title": "Transfers",
+      "summary": "SSHFS, rsync, canfar data cp, large uploads.",
       "category": "platform"
     },
     {
       "id": "canfar-quotas",
       "path": "skills/canfar-quotas",
       "title": "Quotas",
-      "summary": "Home, project, vault quotas.",
+      "summary": "Home, project, scratch, vault quotas.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-groups",
+      "path": "skills/canfar-groups",
+      "title": "Groups",
+      "summary": "CADC group management, membership, teams.",
       "category": "platform"
     },
     {
       "id": "canfar-permissions",
       "path": "skills/canfar-permissions",
       "title": "Permissions",
-      "summary": "Groups, ACLs, allocations.",
+      "summary": "Allocations, POSIX ACLs, Harbor, VOSpace ACLs.",
       "category": "platform"
     },
     {
-      "id": "canfar-limits",
-      "path": "skills/canfar-limits",
-      "title": "Limits",
-      "summary": "cgroup, CPU/RAM/GPU, scratch.",
+      "id": "canfar-batch",
+      "path": "skills/canfar-batch",
+      "title": "Batch",
+      "summary": "Headless sessions, replicas up to 512, parallel jobs.",
       "category": "platform"
     },
     {
-      "id": "canfar-cvmfs",
-      "path": "skills/canfar-cvmfs",
-      "title": "CVMFS",
-      "summary": "Alliance software at /cvmfs.",
+      "id": "canfar-containers",
+      "path": "skills/canfar-containers",
+      "title": "Containers",
+      "summary": "Harbor, astroml, custom images, contributed port 5000.",
       "category": "platform"
     },
     {
-      "id": "canfar-concurrency",
-      "path": "skills/canfar-concurrency",
-      "title": "Concurrency",
-      "summary": "Shared /arc/home, locks.",
+      "id": "canfar-auth",
+      "path": "skills/canfar-auth",
+      "title": "Authentication",
+      "summary": "Login, CADC/SRCNet IDP, certificates, servers.",
       "category": "platform"
     },
     {
       "id": "canfar-cli",
       "path": "skills/canfar-cli",
       "title": "CANFAR CLI",
-      "summary": "canfar login/create/ps/data.",
+      "summary": "canfar login/create/ps/data automation.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-python-client",
+      "path": "skills/canfar-python-client",
+      "title": "Python client",
+      "summary": "Session/AsyncSession API automation.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-doi",
+      "path": "skills/canfar-doi",
+      "title": "DOI publication",
+      "summary": "Data Publication Service, Vault releases.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-cadc-data",
+      "path": "skills/canfar-cadc-data",
+      "title": "CADC archives",
+      "summary": "cadcget, TAP, archive download vs VOSpace.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-limits",
+      "path": "skills/canfar-limits",
+      "title": "Limits",
+      "summary": "cgroup, CPU/RAM/GPU, scratch, session caps.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-cvmfs",
+      "path": "skills/canfar-cvmfs",
+      "title": "CVMFS",
+      "summary": "Alliance software at /cvmfs when cluster mounts it.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-best-practices",
+      "path": "skills/canfar-best-practices",
+      "title": "Best practices",
+      "summary": "Scale-out pipelines, batch-friendly code.",
+      "category": "platform"
+    },
+    {
+      "id": "canfar-concurrency",
+      "path": "skills/canfar-concurrency",
+      "title": "Concurrency",
+      "summary": "Shared /arc/home, locks, NFS cautions.",
       "category": "platform"
     },
     {
       "id": "canfar-troubleshooting",
       "path": "skills/canfar-troubleshooting",
       "title": "Troubleshooting",
-      "summary": "Common failures.",
+      "summary": "Common failures and diagnostics.",
       "category": "platform"
     },
     {
-      "id": "canfar-ray",
-      "path": "skills/canfar-ray",
-      "title": "Ray compute",
+      "id": "astroai-ray",
+      "path": "skills/astroai-ray",
+      "title": "Ray compute (AstroAI)",
       "summary": "Ray cluster and jobs via astroai.",
       "category": "platform"
     }
@@ -99,21 +169,31 @@
     {
       "id": "canfar-platform",
       "title": "CANFAR Platform Companion",
-      "summary": "Sessions, storage, quotas, and permissions \u2014 students ask in plain language.",
+      "summary": "Sessions, storage, groups, transfers, permissions — ask in plain language.",
       "includes": [
         "canfar-platform",
+        "canfar-getting-started",
         "canfar-architecture",
         "canfar-sessions",
         "canfar-storage",
         "canfar-vospace",
+        "canfar-transfers",
         "canfar-quotas",
+        "canfar-groups",
         "canfar-permissions",
+        "canfar-batch",
+        "canfar-containers",
+        "canfar-auth",
+        "canfar-cli",
+        "canfar-python-client",
+        "canfar-doi",
+        "canfar-cadc-data",
         "canfar-limits",
         "canfar-cvmfs",
+        "canfar-best-practices",
         "canfar-concurrency",
-        "canfar-cli",
         "canfar-troubleshooting",
-        "canfar-ray"
+        "astroai-ray"
       ]
     }
   ]

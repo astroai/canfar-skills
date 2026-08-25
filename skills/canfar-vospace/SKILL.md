@@ -1,61 +1,79 @@
 ---
 name: canfar-vospace
 description: >
-  CANFAR VOSpace: Vault vs ARC VOSpace, vos URIs, vcp vls vsync vmkdir vchmod,
-  cadc-get-cert, web file manager, canfar data, public sharing, metadata.
-  Use for vault, VOSpace, vos colon paths, or moving data to long-term storage.
+  CANFAR VOSpace: Vault long-term storage, ARC VOSpace API, vos URIs, vcp vls
+  vsync vmkdir vchmod, web file managers, metadata sharing public URLs, Python vos.
+  Use for vault, VOSpace, vos colon, archive sharing, publish data.
 ---
 # VOSpace (Vault & ARC)
 
-## Vault vs ARC vs scratch
+Docs: [VOSpace guide](https://opencadc.github.io/canfar/latest/platform/storage/vospace/)
 
-| | Vault | ARC (home/projects) | Scratch |
+## When to use which
+
+| | **Vault** | **ARC** (home/projects) | **Scratch** |
 | --- | --- | --- | --- |
-| Persistence | Permanent | Permanent | Session only |
-| Backup | Geo-redundant | Daily snapshots | None |
-| Speed | Slower (network) | Medium (POSIX) | Fast (local SSD) |
+| Purpose | Archive, share, publish | Active team work | Temp compute |
+| Backup | Geo-redundant | Daily snapshots (CADC) | None |
+| Speed | Slower | Medium (POSIX) | Fastest |
 | Public URLs | Yes | No | No |
-| CLI | `vcp`, `vls`, … | `cp`, `rsync` | `cp` |
+| Access | Web + `vos:` API | POSIX + VOSpace view | Session only |
 
-**ARC** and **Cavern** name the same VOSpace image for user POSIX mounts.
+**ARC** and **Cavern** = same VOSpace image backing POSIX mounts on many deployments.
 
-## Web UI
+## Web managers (CADC example)
 
-- [Vault file manager](https://www.canfar.net/storage/vault/list/)
-- [ARC file manager](https://www.canfar.net/storage/arc/list/)
+- [Vault](https://www.canfar.net/storage/vault/list/)
+- [ARC VOSpace view](https://www.canfar.net/storage/arc/list/)
 
-## CLI (pre-installed on AstroAI)
+Upload, permissions (right-click → Properties), public links.
+
+## CLI
 
 ```bash
-cadc-get-cert -u $USER          # or use canfar login flow
+canfar login
 vls vos:myuser
-vcp ./result.fits vos:myuser/out/
+vls vos:myuser/projects/
+vcp ./table.fits vos:myuser/releases/v1/
 vcp vos:myuser/in/large.fits /scratch/
-vsync /scratch/processed vos:myuser/processed/
+vsync /arc/projects/mygroup/out vos:myuser/published/
 vmkdir vos:myuser/newdir
+vchmod g+w vos:myuser/shared/   # when needed
 ```
 
-Authentication: `canfar login` or cert under `/arc/home`.
+Legacy cert path: `cadc-get-cert -u $USER` → `~/.ssl/cadcproxy.pem` (~10 days typical)
 
-## canfar data (platform archive I/O)
+## Sharing model
 
-Use when staging/syncing between ARC paths (not a replacement for all `vcp`):
+| Permission | Meaning |
+| --- | --- |
+| Read (r) | List/download |
+| Write (w) | Modify/delete |
+| Execute (x) | Traverse directories |
+
+Targets: **Owner**, **Group** (see `canfar-groups`), **Other** (public).
+
+## ARC via VOSpace URI
 
 ```bash
-canfar data stage /arc/projects/mygroup/raw
-canfar data sync /scratch/out /arc/projects/mygroup/out
+vcp file.fits vos:/arc:projects/mygroup/incoming/
+# or: canfar data cp … arc:/projects/mygroup/incoming/file.fits
 ```
 
-There is **no** `astroai` VOSpace wrapper — use `vcp`/`vls` or `canfar data`.
+POSIX path `/arc/projects/mygroup/` and VOSpace view of same allocation.
 
-## Sharing
+## Large transfers
 
-Vault: right-click → Properties → Permissions (r/w/x for owner/group/other).
+Use `vcp`/`vsync`, not web UI — see `canfar-transfers`.
 
-ARC projects: **group membership** + POSIX ACLs — see `canfar-permissions`.
+## Publication
+
+DOI workflow uses Vault — `canfar-doi`.
 
 ## Agent rules
 
-1. Large interactive work on `/scratch` or `/arc`; vault for **publish/archive**.
-2. `vos:` paths are not session-local — good for cross-session handoff.
-3. For FITS archive access also consider `cadcget` / `cadcaccess` (CADC archives).
+1. Vault for **citation-ready** releases; `/arc/projects` for **active** collaboration.
+2. `vos:` paths work **across sessions** — good handoff between people.
+3. SRCNet `canfar login srcnet` maps primary storage leaf **`cavern`**, not always `arc`.
+
+Related: `canfar-cadc-data` (archives ≠ your vos space)

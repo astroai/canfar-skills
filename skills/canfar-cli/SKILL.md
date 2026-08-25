@@ -1,64 +1,84 @@
 ---
 name: canfar-cli
 description: >
-  canfar CLI: login logout auth show, create delete ps open sessions, stats
-  info, canfar data stage sync, authentication contexts, Science Portal
+  canfar CLI: login, auth show ls rm, create delete ps open sessions, stats
+  info events, canfar data cp ls rm with arc vault local paths, Science Portal
   alternative. Use when driving CANFAR from terminal or scripting sessions.
 ---
 # CANFAR CLI
 
 Docs: [opencadc.github.io/canfar](https://opencadc.github.io/canfar/)
 
-Installed on AstroAI images (`/opt/astroai/venv/cadc`). Upgrade in-session:
-`upgrade-cadc-tools.sh --upgrade canfar`.
+Install: platform images include it; locally via `pip install canfar`.
 
 ## Auth
 
 ```bash
 canfar login
+canfar login cadc
+canfar login srcnet
 canfar auth show
-canfar logout
+canfar auth ls
+canfar auth rm cadc          # remove saved credentials for an IDP
+canfar auth purge --force    # clear all saved auth
 ```
 
-Credentials: `~/.canfar/config.yaml` on `/arc/home` — shared across your sessions.
+Credentials persist under `/arc/home` (e.g. `~/.canfar/config.yaml`) — shared
+across your sessions. There is no `canfar logout` — use `auth rm` or `auth purge`.
+
+See `canfar-auth` for IDP, certificates, server selection.
 
 ## Sessions
 
 ```bash
-canfar create --name myterm webterm
-canfar create --name nb --cpu 2 --memory 4 notebook skaha/astroml:latest
+canfar create notebook skaha/astroml:latest
+canfar create --name mydesk --cpu 4 --memory 16 desktop skaha/astroml:latest
 canfar ps
+canfar ps --json
 canfar open <session-id>
 canfar delete <session-id>
-canfar stats <session-id>    # when supported
+canfar info <session-id>
+canfar events <session-id>
+canfar stats
 ```
 
-AstroAI contributed example:
+Session types: `canfar-sessions`. Batch/headless: `canfar-batch`.
+
+## Data movement (`canfar data`)
+
+Operands use **storage identifier + absolute path** — bare `/arc/...` is rejected:
 
 ```bash
-canfar create --name dev contributed images.canfar.net/astroai/webterm:26.08
+canfar data ls -lh arc:/home/$USER
+canfar data cp local:/absolute/path/file.fits arc:/projects/mygroup/file.fits
+canfar data cp vault:/folder/file.fits arc:/home/$USER/file.fits
 ```
 
-## Data movement
+Inside a session, use POSIX `cp` between `/scratch` and `/arc`. For `vcp`/`vls`
+see `canfar-vospace`. Large transfers: `canfar-transfers`.
+
+## Automation
 
 ```bash
-canfar data stage /arc/projects/group/incoming
-canfar data sync /scratch/results /arc/projects/group/results
+canfar auth show    # verify before scripts
+canfar ps --json    # parse session list
 ```
 
-For VOSpace URIs use `vcp`/`vls` — see `canfar-vospace`.
+Non-interactive jobs: login once in that `/arc/home`, then reuse credentials.
 
-## vs astroai
+## vs other tools
 
 | Tool | Scope |
 | --- | --- |
-| `canfar` | Platform: auth, sessions, archive data |
-| `astroai` | In-session: env, Ray, agents, status |
+| `canfar` | Platform: auth, sessions, data |
+| `vcp` / Python `vos` | VOSpace |
+| `cadcget` | CADC **archives** |
+| `astroai` | **AstroAI images only** — env, Ray, agents |
 
-`astroai status` embeds `canfar auth show` and `canfar ps` when available.
+`astroai status` (when present) embeds `canfar auth show` and `canfar ps`.
 
 ## Agent rules
 
-1. User not on AstroAI image → `canfar` may still work; `astroai` won't.
-2. Prefer `canfar ps` over guessing session IDs from URLs.
-3. Non-interactive scripts: ensure `canfar login` already done in that home.
+1. Prefer `canfar ps` over guessing session IDs from URLs.
+2. User on laptop → `canfar login` works; no `/arc` until in a session.
+3. Destructive ops (`delete`) — confirm session ID from `canfar ps`.

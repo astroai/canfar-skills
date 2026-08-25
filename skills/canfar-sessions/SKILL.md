@@ -1,71 +1,85 @@
 ---
 name: canfar-sessions
 description: >
-  CANFAR interactive sessions: create, open, stop, lifecycle, idle suspend,
-  flexible vs fixed CPU/memory, Science Portal vs canfar CLI, AstroAI images
-  (webterm, notebook, marimo, vscode, openresearch, ray-manager). Use when
-  launching, managing, or understanding session behavior or image choice.
+  CANFAR interactive sessions: Notebook JupyterLab, Desktop GUI, CARTA radio,
+  Firefly tables, Contributed apps, headless batch, flexible vs fixed resources,
+  GPU, session lifecycle, Science Portal and canfar create. Use when launching
+  sessions, choosing session type, CARTA Firefly desktop notebook.
 ---
-# CANFAR sessions
+# Interactive sessions
 
-## Create and manage
+Docs: [Sessions overview](https://opencadc.github.io/canfar/latest/platform/sessions/)
 
-**Portal:** [Science Portal](https://www.canfar.net/science-portal/) → pick image → launch.
+## Session types
 
-**CLI:**
-
-```bash
-canfar login                              # once; creds under /arc/home
-canfar create --name demo webterm         # contributed image
-canfar create --cpu 4 --memory 8 notebook skaha/astroml:latest   # fixed resources
-canfar ps
-canfar open <session-id>
-canfar delete <session-id>
-```
-
-## AstroAI images (Contributed unless noted)
-
-| Image | Port | Use |
+| Type | Interface | Best for |
 | --- | --- | --- |
-| `openresearch` | 5000 | Day-to-day hub + `/astroai-agents/` |
-| `webterm` / `ghostty-web` | 5000 | Shell + tmux |
-| `vscode` | 5000 | OpenVSCode |
-| `marimo` | 5000 | Reactive `.py` notebooks |
-| `notebook` | 8888 | JupyterLab |
-| `ray-manager` | 5000 | Ray cluster UI + head |
-| `improc-webterm` / `improc-notebook` | 5000 / 8888 | Imaging stack |
+| **Notebook** | JupyterLab :8888 | Analysis, docs, prototyping |
+| **Desktop** | Full Linux GUI | CASA, legacy GUI tools |
+| **CARTA** | Radio astronomy viewer | Cubes, masks, regions |
+| **Firefly** | Table/image viewer | Survey catalogs |
+| **Contributed** | Community web apps | marimo, VS Code web, custom |
+| **Headless** | No UI | Batch — see `canfar-batch` |
 
-Tag example: `images.canfar.net/astroai/openresearch:26.08`
-
-```bash
-canfar create --name orx contributed images.canfar.net/astroai/openresearch:26.08
-```
+Launch: Science Portal (your deployment's URL) or `canfar create`.
 
 ## Lifecycle
 
-1. **Create** — 30 s–3 min (image pull on first use)
-2. **Active** — full CPU/RAM within allocation; storage mounted
-3. **Idle** — may suspend after inactivity (platform policy)
-4. **Delete** — container gone; **data on `/arc` and VOSpace persists**
+- **Start:** ~30 s–3 min (image pull first time)
+- **Runtime:** deployer-configured (`expirySeconds` in Skaha helm). Chart default **4 days** for interactive; CADC FAQ cites up to **7 days** — verify on your site. Headless default **14 days** in stock chart.
+- **End:** container deleted — **data on `/arc` and Vault persists**
 
-!!! Persist before delete: `git push`, `astroai save`, `canfar data sync`.
+Always persist to `/arc/projects` or `vos:` before delete.
 
-## Resource modes
+## Session count limits
 
-| Mode | When | CLI hint |
-| --- | --- | --- |
-| **Flexible** (default) | Exploration, dev | `canfar create notebook …` |
-| **Fixed** | Predictable performance | `--cpu N --memory GiB` |
+Interactive sessions (notebook, desktop, CARTA, Firefly, contributed) share a
+**per-user cap** (stock helm default **5**). Headless/batch is **exempt**.
+At cap, **new creates are rejected** — delete idle sessions:
 
-`astroai status` shows **this pod's** CPU/mem/cgroup — not cluster-wide Ray.
+```bash
+canfar ps
+canfar delete <session-id>
+```
 
-## OpenResearch hub
+## Resources
 
-On `openresearch`: connect URL + `/astroai-agents/` → **Start batch compute**
-(autoscaling ray-manager) + agent install table.
+| Mode | When |
+| --- | --- |
+| **Flexible** (default) | Exploration, variable load |
+| **Fixed** (`--cpu`, `--memory`) | Predictable performance, deadlines |
+
+```bash
+canfar create notebook skaha/astroml:latest
+canfar create --cpu 4 --memory 16 desktop skaha/astroml:latest
+```
+
+## GPU
+
+Request GPU in session config; use CUDA-enabled images (e.g. `astroml-cuda`).
+Verify with `nvidia-smi` when allocated.
+
+## Contributed applications
+
+Portal → **Contributed** → pick app. Web UI must listen on **port 5000**
+(Skaha probe contract). Community guide: [Contributed apps](https://opencadc.github.io/canfar/latest/platform/sessions/contributed.md)
+
+## AstroAI images (optional subset)
+
+When your site ships AstroAI Harbor catalog:
+
+| Image | Notes |
+| --- | --- |
+| `openresearch` | Hub at `/astroai-agents/` |
+| `webterm`, `vscode`, `marimo`, `notebook` | See `/opt/astroai/USAGE.md` |
+| `ray-manager` | With `astroai-ray` |
+
+Generic CANFAR users use `skaha/*` and team images from Harbor.
 
 ## Agent rules
 
-1. Session containers are **temporary**; only `/arc`, VOSpace, and git remotes survive.
-2. `/scratch` is **not visible** to other sessions — not a bug.
-3. Headless **Pending** on contributed sessions often means quota (~3) or Skaha flake — see `canfar-troubleshooting`.
+1. `/scratch` invisible to other sessions — not a bug.
+2. Match session type to workflow (CARTA for radio cubes, not Notebook alone).
+3. Pending after create → `canfar events <id>`, not just "wait" (queue, pull, probe).
+
+Related: `canfar-containers`, `canfar-limits`, `canfar-cli`

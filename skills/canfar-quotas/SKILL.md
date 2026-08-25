@@ -1,57 +1,68 @@
 ---
 name: canfar-quotas
 description: >
-  CANFAR storage quotas: home directory quota on /arc/home, project quotas on
-  /arc/projects, vault VOSpace quota, astroai status --json, CephFS xattrs,
-  ceph.dir.rbytes lag, home breakdown, when save or agent setup fails.
-  Use when disk full, quota percent, or how much space is left.
+  CANFAR storage quotas: home 10GB, project and scratch defaults, vault VOSpace
+  quota, df du monitoring, request increase support@canfar.net, astroai status
+  on AstroAI images. Use when disk full, quota percent, space left, no space.
 ---
-# Quotas
+# Quotas & disk usage
 
-## Check first
+Docs: [Storage overview](https://opencadc.github.io/canfar/latest/platform/storage/)
 
-```bash
-astroai status
-astroai status --json
-astroai status --all          # every team project + vault nodes
-```
+## Default allocations (typical)
 
-JSON includes: home `quota_pct`, arc project lines, vault nodes, `canfar` auth/ps.
+| Tier | Path | Typical quota |
+| --- | --- | --- |
+| ARC Home | `/arc/home/<user>` | **~10 GB** |
+| ARC Project | `/arc/projects/<group>` | **~200 GB** (varies) |
+| Scratch | `/scratch` | **~200 GB** / session |
+| Vault | `vos:…` | Per container |
 
-## Home (`/arc/home/<you>`)
-
-- Default allocation ~**10 GB** (CephFS directory quota)
-- CANFAR uses **`ceph.quota.max_bytes`** xattrs; `astroai status` prefers these over raw `df`
-- **`ceph.dir.rbytes` can lag** a few seconds after large writes — refresh `astroai status`, not a frozen UI bug
-
-**Keep home small:** agent configs, saves, certs — not datasets or conda envs.
+## Check usage (all users)
 
 ```bash
-astroai clean --yes           # ~/.cache on home (not scratch caches)
-du -sh ~/.cache ~/.local/* 2>/dev/null | sort -h
+df -h /arc/home/$USER
+df -h /arc/projects/mygroup
+du -sh /arc/home/$USER/* 2>/dev/null | sort -h
+du -sh /arc/projects/mygroup/* 2>/dev/null | sort -h
 ```
 
-Agent setup **refuses** at home quota ≥98% (use `--force` only if user understands risk).
+Vault: [Vault file manager](https://www.canfar.net/storage/vault/list/) usage display.
 
-## Project (`/arc/projects/<group>`)
+## Request more space
 
-- Separate team quota; membership via CADC groups
-- `astroai status --all` lists each project path + used/total/%
+Email **`support@canfar.net`** with:
+- Project name
+- Current usage / quota
+- Requested size
+- Brief science justification
 
-Project allocation is **not** created with `mkdir` — admin/VOSpace allocation required (see `canfar-permissions`).
+## Home quota tips
 
-## Vault
+Keep home for:
+- `~/.canfar`, `~/.ssh`, configs, small scripts
 
-- Per-node quota on VOSpace containers
-- Shown in `astroai status --json` under vault when authenticated
+**Not** for datasets, conda envs, or download caches — use `/arc/projects` or `/scratch`.
 
 ## Scratch
 
-- Usually **not** a long-term quota concern — large but **session-only**
-- Filling scratch does not free home; filling home blocks saves and agent config
+Full scratch ≠ home full. Scratch resets each session — delete temp files freely.
+
+## AstroAI images (optional)
+
+```bash
+astroai status --json   # home %, project lines, vault nodes, ceph xattrs
+astroai clean --yes     # ~/.cache on home only
+```
+
+Ceph `ceph.dir.rbytes` may lag seconds after large writes — refresh status.
+
+Agent setup may refuse at home ≥98% full.
 
 ## Agent rules
 
-1. Always run `astroai status --json` before advising "delete X" — cite actual `quota_pct`.
-2. Warn when home >90%: agent configs and `astroai save` may fail.
-3. Move big data to `/arc/projects` or `$SCRATCH`, never bloat home.
+1. Run `df`/`du` before delete advice — cite paths and sizes.
+2. Warn at >90% home: saves and logins may fail.
+3. Big science data → **project space**, not home.
+
+Related: `canfar-storage`, `canfar-groups` (project allocations)

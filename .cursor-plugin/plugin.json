@@ -1,10 +1,10 @@
 {
   "name": "canfar-skills",
-  "version": "0.1.0",
-  "description": "CANFAR Science Platform skills for AstroAI agents — sessions, storage, quotas, permissions.",
+  "version": "0.2.0",
+  "description": "CANFAR Science Platform skills for agents — CADC, SRCNet, self-hosted; plain-language routing.",
   "author": { "name": "AstroAI" },
   "homepage": "https://github.com/astroai/canfar-skills",
   "repository": "https://github.com/astroai/canfar-skills",
   "license": "Apache-2.0",
-  "keywords": ["canfar", "cadc", "astroai", "science-platform", "storage", "sessions"]
+  "keywords": ["canfar", "cadc", "srcnet", "astroai", "science-platform", "storage", "sessions", "vospace", "groups"]
 }

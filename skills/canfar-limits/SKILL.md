@@ -1,57 +1,78 @@
 ---
 name: canfar-limits
 description: >
-  CANFAR session resource limits: Kubernetes cgroup memory CPU, astroai status
-  cgroup_mem_pct, scratch disk, GPU nvidia-smi, flexible vs fixed session
-  sizing, contributed session count limits. Use when OOM, throttled, or how
+  CANFAR session resource limits: Kubernetes cgroup memory CPU, nproc, scratch
+  disk, GPU nvidia-smi, flexible vs fixed session sizing, per-user interactive
+  session cap, astroai status on AstroAI images. Use when OOM, throttled, or how
   much CPU RAM GPU this session has.
 ---
 # Session limits
 
-## What to inspect
+## Inspect resources (any session)
+
+```bash
+nproc
+free -h
+df -h /scratch
+cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null
+nvidia-smi   # when GPU allocated
+canfar stats   # cluster capacity
+```
+
+Portal session details and `canfar ps` show requested CPU/RAM/GPU.
+
+## Deployer defaults (stock science-platform helm)
+
+| Limit | Default | Notes |
+| --- | --- | --- |
+| Interactive session lifetime | **4 days** (`expirySeconds: 345600`) | CADC FAQ may cite 7 days — site-specific |
+| Headless session lifetime | **14 days** | Hardcoded in headless launch template |
+| Interactive sessions per user | **5** | Notebook+desktop+CARTA+Firefly+contributed combined |
+| Scratch (`/scratch`) | **200Gi** ephemeral | **Desktop: 10Gi** only |
+| Flexible CPU/RAM ceiling | up to **8 CPU / 32 GiB** | From Skaha context when LimitRange disabled |
+
+Headless/batch jobs do **not** count toward the interactive session cap.
+
+## AstroAI images (optional)
 
 ```bash
 astroai status --json
-# fields: cpu_pct, mem_pct, cgroup_mem_pct, scratch.used/free, gpu[]
+# cpu_pct, mem_pct, cgroup_mem_pct, scratch.used/free, gpu[]
 ```
-
-| Signal | Meaning |
-| --- | --- |
-| `cgroup_mem_pct` | Pod memory limit (K8s cgroup v2 `/sys/fs/cgroup/memory.*`) |
-| `mem_pct` | Host-visible RAM (may differ from cgroup cap) |
-| `cpu_pct` | Derived from load vs `nproc` |
-| `scratch` | Local SSD usage for `/scratch` mount |
-| `gpu` | `nvidia-smi` when GPUs allocated |
 
 ## Session sizing (Skaha)
 
-**Flexible (default):** burst within cluster capacity; faster schedule.
-
-**Fixed:** `--cpu N --memory M` reserves resources; may wait in queue.
+| Mode | When |
+| --- | --- |
+| **Flexible** (default) | Exploration; burst within cluster |
+| **Fixed** (`--cpu`, `--memory`) | Predictable performance; may queue |
 
 ```bash
-canfar create --cpu 4 --memory 16 contributed images.canfar.net/astroai/webterm:26.08
-canfar info <session-id>    # when available
+canfar create --cpu 4 --memory 16 notebook skaha/astroml:latest
 ```
 
-## Contributed session count
+## OOM vs disk full
 
-Platform often caps **~3 concurrent contributed** sessions per user — if new sessions stay **Pending**, check `canfar ps` and delete idle sessions.
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| Process killed, exit 137 | cgroup memory | Smaller batches; request `--memory` |
+| `No space left` on `/scratch` | Scratch quota | Delete temp; move to `/arc/projects` |
+| Save/login fails | **Home** quota | `canfar-quotas` |
 
-## Scratch vs memory
-
-- **OOM in Python** → reduce batch size or request more `--memory`
-- **Disk full on `/scratch`** → move to `/arc/projects` or delete caches; unrelated to home quota
-- **`$WORK` on `/scratch/src`** survives container restart/OOM but not session delete
+Scratch full ≠ home full. Desktop sessions have much smaller scratch caps.
 
 ## GPUs
 
-Only when session/image requests GPU resources. Verify with `astroai status --json` → `gpu` array.
+Request GPU in session config; use CUDA-enabled images. Set `OMP_NUM_THREADS` ≈ allocated CPUs for parallel jobs.
 
-Set thread envs to match allocated CPUs in parallel jobs (`OMP_NUM_THREADS`, etc.).
+## Batch / Ray
+
+Headless replicas each get their own cgroup. Client max **512 replicas** per create call.
+
+**AstroAI Ray:** manager ≥8 GiB RAM recommended — `astroai-ray`.
 
 ## Agent rules
 
-1. Distinguish **cgroup OOM** (pod limit) from **home quota full** (ARC).
-2. Do not advise requesting 100 CPUs in one session — prefer many small Ray jobs (`canfar-ray`).
-3. Ray manager: memory **≥8 GiB** recommended.
+1. Distinguish cgroup OOM from ARC home quota.
+2. Do not advise 100 CPUs in one interactive session — use batch replicas or Ray.
+3. `/scratch` survives container restart but **not** session delete.

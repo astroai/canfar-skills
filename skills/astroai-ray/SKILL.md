@@ -1,13 +1,16 @@
 ---
-name: canfar-ray
+name: astroai-ray
 description: >-
-  Drive a CANFAR Ray cluster and run jobs on it with astroai:
-  cluster start/status/stop, cluster dashboard, and run/jobs submit/list/logs.
-  Use when the user wants batch compute, Ray workers, or to run a script on
-  an existing Ray cluster.
+  AstroAI only: drive a CANFAR Ray cluster with astroai — cluster
+  start/status/stop, dashboard, run/jobs submit/list/logs. Use when the user
+  wants Ray batch compute on AstroAI images, not generic CANFAR batch (see
+  canfar-batch).
 ---
 
-# CANFAR Ray with `astroai`
+# CANFAR Ray with `astroai` (AstroAI images only)
+
+> **Scope:** Requires AstroAI session images with `astroai` CLI. For platform
+> headless/batch without Ray, use `canfar-batch`.
 
 One CLI. Installed on AstroAI session images.
 
