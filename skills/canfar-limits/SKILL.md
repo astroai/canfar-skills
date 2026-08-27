@@ -1,78 +1,81 @@
 ---
 name: canfar-limits
 description: >
-  CANFAR session resource limits: Kubernetes cgroup memory CPU, nproc, scratch
-  disk, GPU nvidia-smi, flexible vs fixed session sizing, per-user interactive
-  session cap, astroai status on AstroAI images. Use when OOM, throttled, or how
-  much CPU RAM GPU this session has.
+  CANFAR Session resource limits: cgroup CPU/memory, ephemeral storage, GPU,
+  live Context resources, flexible vs fixed allocation, and the per-user
+  interactive Session cap. Use when OOM, throttled, queued, or asking how much
+  CPU, RAM, GPU, or scratch a Session has.
 ---
 # Session limits
 
-## Inspect resources (any session)
+## Inspect the live Session
 
 ```bash
+canfar info <session-id>
 nproc
 free -h
 df -h /scratch
 cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null
-nvidia-smi   # when GPU allocated
-canfar stats   # cluster capacity
+nvidia-smi   # only when a GPU was allocated
+canfar stats # platform capacity, not this Session's cgroup
 ```
 
-Portal session details and `canfar ps` show requested CPU/RAM/GPU.
+Portal Session details and `canfar info` show requested CPU/RAM/GPU. For
+programmatic choices, query the selected Server rather than hard-coding values:
 
-## Deployer defaults (stock science-platform helm)
+```python
+from canfar.context import Context
+print(Context().resources())
+```
 
-| Limit | Default | Notes |
+## Implementation defaults, not user guarantees
+
+The current `science-platform` chart/templates provide these reference defaults:
+
+| Setting | Current implementation default | Verify live with |
 | --- | --- | --- |
-| Interactive session lifetime | **4 days** (`expirySeconds: 345600`) | CADC FAQ may cite 7 days — site-specific |
-| Headless session lifetime | **14 days** | Hardcoded in headless launch template |
-| Interactive sessions per user | **5** | Notebook+desktop+CARTA+Firefly+contributed combined |
-| Scratch (`/scratch`) | **200Gi** ephemeral | **Desktop: 10Gi** only |
-| Flexible CPU/RAM ceiling | up to **8 CPU / 32 GiB** | From Skaha context when LimitRange disabled |
+| Interactive Session lifetime | 4 days (`expirySeconds: 345600`) | Portal / `canfar info` |
+| Headless deadline | 14 days in the headless Job template | `canfar info` / events |
+| Active interactive Sessions | 5 per user | create error / Portal |
+| Non-desktop ephemeral ceiling | 200 GiB | `df -h /scratch` |
+| Desktop ephemeral storage | Separate smaller Job template value | `df -h /scratch` |
+| Flexible CPU/RAM | LimitRange + live Context | `Context().resources()` |
 
-Headless/batch jobs do **not** count toward the interactive session cap.
+Operators can override the chart settings, queue policy, LimitRange, GPU pools,
+and node capacity. Do not promise these values to a user.
 
-## AstroAI images (optional)
+Headless Sessions are exempt from Skaha's interactive Session-count check. The
+current client accepts at most 512 replicas in one request, but a deployment or
+queue can accept fewer in practice.
 
-```bash
-astroai status --json
-# cpu_pct, mem_pct, cgroup_mem_pct, scratch.used/free, gpu[]
-```
-
-## Session sizing (Skaha)
+## Flexible versus fixed
 
 | Mode | When |
 | --- | --- |
-| **Flexible** (default) | Exploration; burst within cluster |
-| **Fixed** (`--cpu`, `--memory`) | Predictable performance; may queue |
+| Flexible | Exploration; site policy supplies request and limit |
+| Fixed (`--cpu`, `--memory`, `--gpu`) | Measured work needing a specific allocation |
 
 ```bash
-canfar create --cpu 4 --memory 16 notebook skaha/astroml:latest
+canfar create notebook skaha/astroml:latest --cpu 4 --memory 16
 ```
 
-## OOM vs disk full
+A larger fixed request can wait longer in Kueue or fail if the site does not
+offer that combination. Check `canfar events <id>`.
 
-| Symptom | Likely cause | Fix |
+## OOM, disk full, or quota
+
+| Symptom | Likely boundary | Action |
 | --- | --- | --- |
-| Process killed, exit 137 | cgroup memory | Smaller batches; request `--memory` |
-| `No space left` on `/scratch` | Scratch quota | Delete temp; move to `/arc/projects` |
-| Save/login fails | **Home** quota | `canfar-quotas` |
+| Process killed / exit 137 | cgroup memory | Smaller chunks or measured fixed memory |
+| `No space left` on `/scratch` | Session ephemeral storage | Remove temporary files; persist results |
+| Save/login fails in home | Persistent-home quota | `canfar-quotas` |
+| Pending after fixed request | Queue/capacity/image pull | `canfar events <id>` and `canfar stats` |
 
-Scratch full ≠ home full. Desktop sessions have much smaller scratch caps.
-
-## GPUs
-
-Request GPU in session config; use CUDA-enabled images. Set `OMP_NUM_THREADS` ≈ allocated CPUs for parallel jobs.
-
-## Batch / Ray
-
-Headless replicas each get their own cgroup. Client max **512 replicas** per create call.
-
-**AstroAI Ray:** manager ≥8 GiB RAM recommended — `astroai-ray`.
+Scratch full, home quota, and cluster capacity are different problems.
 
 ## Agent rules
 
-1. Distinguish cgroup OOM from ARC home quota.
-2. Do not advise 100 CPUs in one interactive session — use batch replicas or Ray.
-3. `/scratch` survives container restart but **not** session delete.
+1. Distinguish requested resources, cgroup limits, platform capacity, and storage quotas.
+2. Use the live Context/Portal before recommending a resource value.
+3. For independent work, prefer headless replicas over one impractically large Session.
+4. `/scratch` may survive a container restart but not Session deletion/expiry.

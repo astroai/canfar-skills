@@ -1,25 +1,32 @@
 ---
 name: canfar-vospace
 description: >
-  CANFAR VOSpace: Vault long-term storage, ARC VOSpace API, vos URIs, vcp vls
-  vsync vmkdir vchmod, web file managers, metadata sharing public URLs, Python vos.
-  Use for vault, VOSpace, vos colon, archive sharing, publish data.
+  CANFAR VOSpace Services: discovered Storage Identifiers, CADC Vault and ARC,
+  Cavern, canfar data, Python fsspec, and legacy vos URIs/vcp/vls/vsync/vchmod.
+  Use for Vault, VOSpace, remote storage APIs, ACL sharing, or publication data.
 ---
 # VOSpace (Vault & ARC)
 
-Docs: [VOSpace guide](https://opencadc.github.io/canfar/latest/platform/storage/vospace/)
+Docs: [VOSpace guide](https://www.opencadc.org/canfar/latest/platform/storage/vospace/)
+
+VOSpace is an IVOA service API, not one universal disk. After `canfar login`, a
+Science Platform Server can expose several VOSpace Services, each addressed by a
+discovered **Storage Identifier**. CADC normally exposes `arc` and `vault`; the
+SRCNet client prefers a primary service with the registry leaf `cavern`.
 
 ## When to use which
 
-| | **Vault** | **ARC** (home/projects) | **Scratch** |
+| | **CADC Vault** | **Cavern/ARC** | **Scratch** |
 | --- | --- | --- | --- |
 | Purpose | Archive, share, publish | Active team work | Temp compute |
-| Backup | Geo-redundant | Daily snapshots (CADC) | None |
+| Durability | CADC publication/archive policy | Deployment policy | None |
 | Speed | Slower | Medium (POSIX) | Fastest |
-| Public URLs | Yes | No | No |
+| Public sharing | Supported through service ACLs/links | Deployment-specific | No |
 | Access | Web + `vos:` API | POSIX + VOSpace view | Session only |
 
-**ARC** and **Cavern** = same VOSpace image backing POSIX mounts on many deployments.
+**Cavern** is OpenCADC's VOSpace-over-POSIX implementation. **ARC** is CADC's
+deployed service/mount name. They are related concepts, not interchangeable path
+names on every site.
 
 ## Web managers (CADC example)
 
@@ -28,7 +35,23 @@ Docs: [VOSpace guide](https://opencadc.github.io/canfar/latest/platform/storage/
 
 Upload, permissions (right-click → Properties), public links.
 
-## CLI
+## Current CLI
+
+Prefer the current `canfar data` interface when its Storage Identifiers cover the
+operation. Operands always include an identifier and absolute service path:
+
+```bash
+canfar login cadc
+canfar data ls -lh arc:/home/$USER
+canfar data cp local:/absolute/path/table.fits vault:/myuser/releases/v1/table.fits
+canfar data cp vault:/myuser/in/large.fits arc:/projects/mygroup/raw/large.fits
+```
+
+Cross-service `mv` and recursive `rm` are intentionally unsupported. Copy, verify
+the destination, and remove the source separately only when the user authorizes
+deletion.
+
+## Legacy CADC VOSpace tools
 
 ```bash
 canfar login
@@ -38,26 +61,42 @@ vcp ./table.fits vos:myuser/releases/v1/
 vcp vos:myuser/in/large.fits /scratch/
 vsync /arc/projects/mygroup/out vos:myuser/published/
 vmkdir vos:myuser/newdir
-vchmod g+w vos:myuser/shared/   # when needed
+vchmod g+w vos:myuser/shared/ "my-cadc-group"
 ```
 
-Legacy cert path: `cadc-get-cert -u $USER` → `~/.ssl/cadcproxy.pem` (~10 days typical)
+`vchmod g+r` or `g+w` requires the applicable CADC group argument. The
+`cadc-get-cert` default is currently 10 days and writes
+`~/.ssl/cadcproxy.pem`; renew rather than embedding credentials.
+
+## Python API
+
+The current client resolves credentials and VOSpace endpoints into fsspec
+filesystems:
+
+```python
+from canfar.storage import filesystem, identifiers
+
+print(identifiers())
+vault = filesystem("vault")
+with vault.open("/myuser/releases/v1/table.fits", "rb") as handle:
+    header = handle.read(2880)
+```
+
+Use `/scratch` as a cache/materialization target for libraries that require a
+local path. See `canfar-python-client` for API details.
 
 ## Sharing model
 
-| Permission | Meaning |
-| --- | --- |
-| Read (r) | List/download |
-| Write (w) | Modify/delete |
-| Execute (x) | Traverse directories |
-
-Targets: **Owner**, **Group** (see `canfar-groups`), **Other** (public).
+VOSpace ACLs are service metadata, not ordinary POSIX mode bits even when the
+same data also appears through a filesystem mount. Use the site's Storage UI or
+the exact `vchmod` syntax for group/public permissions; verify with `vls -l`.
 
 ## ARC via VOSpace URI
 
 ```bash
+canfar data cp local:/absolute/path/file.fits arc:/projects/mygroup/incoming/file.fits
+# Legacy CADC form when vostools is required:
 vcp file.fits vos:/arc:projects/mygroup/incoming/
-# or: canfar data cp … arc:/projects/mygroup/incoming/file.fits
 ```
 
 POSIX path `/arc/projects/mygroup/` and VOSpace view of same allocation.
@@ -72,8 +111,9 @@ DOI workflow uses Vault — `canfar-doi`.
 
 ## Agent rules
 
-1. Vault for **citation-ready** releases; `/arc/projects` for **active** collaboration.
-2. `vos:` paths work **across sessions** — good handoff between people.
-3. SRCNet `canfar login srcnet` maps primary storage leaf **`cavern`**, not always `arc`.
+1. Use a publication VOSpace for **citation-ready** releases; use persistent
+   project storage (CADC: `/arc/projects`) for **active** collaboration.
+2. Storage Identifier paths work across Sessions and from authorized external clients.
+3. Do not invent `arc`, `vault`, or `cavern`; use discovered identifiers.
 
 Related: `canfar-cadc-data` (archives ≠ your vos space)

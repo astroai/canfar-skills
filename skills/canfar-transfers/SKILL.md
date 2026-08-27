@@ -1,23 +1,28 @@
 ---
 name: canfar-transfers
 description: >
-  CANFAR data transfers: upload download between laptop and CANFAR, SSHFS mount,
-  rsync, VOSpace vcp, direct curl URLs, web file manager, scratch to arc sync,
-  large dataset movement. Use when moving files, upload FITS, sync data, SSHFS,
-  rsync, transfer from local machine.
+  CANFAR data transfers between a laptop, Session scratch, persistent POSIX
+  storage, and VOSpace Services using the Portal, canfar data, fsspec, legacy
+  vcp/vsync, or site-provided SSHFS. Use when moving files, uploading FITS,
+  syncing data, or planning large transfers.
 ---
 # Data transfers
 
-Docs: [Data transfers](https://opencadc.github.io/canfar/latest/platform/storage/transfers/)
+Docs: [Data transfers](https://www.opencadc.org/canfar/latest/platform/storage/transfers/)
 
 ## Choose a method
 
-| Size / scenario | Method |
+| Scenario | Method |
 | --- | --- |
-| Small (<1 GB) | Web file manager or Vault UI (CADC: canfar.net/storage) |
-| Medium (1–100 GB) | VOSpace CLI (`vcp`), direct HTTPS URLs |
-| Large / sync | `rsync` over SSHFS, `vsync` |
-| Inside session | `cp` between `/scratch` and `/arc` |
+| A few files, browser user | Site Storage UI when available |
+| Scripted local ↔ VOSpace | `canfar data cp` with Storage Identifiers |
+| Python/scientific library | `canfar.storage` fsspec filesystem |
+| Existing CADC VOSpace workflow | `vcp` / `vsync` |
+| Active Session work | POSIX `cp` between `/scratch` and persistent storage |
+| Mounted external filesystem | `rsync` to the site-provided SSHFS mount |
+
+Choose by retryability and number of files, not a universal size threshold.
+Browser limits, transfer endpoints, and SSH access are deployment-specific.
 
 ## Inside a session
 
@@ -27,27 +32,30 @@ cp /arc/projects/mygroup/raw/large.fits /scratch/
 cp /scratch/results.csv /arc/projects/mygroup/results/
 ```
 
-## VOSpace CLI
+## Current `canfar data` CLI
 
 ```bash
-canfar login   # or cadc-get-cert
+canfar login
+canfar data cp local:/absolute/path/local.fits arc:/projects/mygroup/data/local.fits
+canfar data ls -lh arc:/projects/mygroup/data/local.fits
+canfar data cp arc:/projects/mygroup/results/result.fits vault:/myuser/releases/result.fits
+```
+
+The client verifies destination metadata for copies. A recursive copy is not a
+snapshot or atomic operation; inspect the destination before removing a source.
+
+## Legacy VOSpace tools
+
+```bash
+cadc-get-cert -u $USER
 vcp ./local.fits vos:myuser/incoming/
-vcp vos:myuser/archive.fits /arc/projects/mygroup/data/
 vsync /arc/projects/mygroup/out vos:myuser/published/
 ```
 
-See `canfar-vospace` for Vault vs ARC URIs.
+Use these when the user already has a CADC `vos:` workflow or needs a feature not
+yet exposed by `canfar data`. See `canfar-vospace` for exact syntax.
 
-## `canfar data cp` (CLI)
-
-Uses storage identifiers, not bare mount paths:
-
-```bash
-canfar data cp local:/absolute/path/file.fits arc:/projects/mygroup/file.fits
-canfar data cp vault:/folder/file.fits arc:/home/$USER/file.fits
-```
-
-## Direct HTTPS (CADC example)
+## Low-level HTTPS (CADC only)
 
 ```bash
 cadc-get-cert --user $USER
@@ -55,15 +63,19 @@ curl --cert ~/.ssl/cadcproxy.pem --upload-file file.fits \
   https://ws-uv.canfar.net/arc/files/projects/mygroup/file.fits
 ```
 
-Host varies by deployment — see your site's filesystem access docs.
+This is a service-specific escape hatch, not the default recommendation. Hosts,
+paths, transfer negotiation, and auth modes vary; prefer the discovered client.
 
 ## SSHFS (from your laptop)
 
-Mount `/arc/home` or project space — SSH keys in `~/.ssh/authorized_keys` on
-CANFAR. See [Filesystem access](https://opencadc.github.io/canfar/latest/platform/storage/filesystem.md).
+CADC provides an SSH/SSHFS path to ARC. Follow the current endpoint and key setup
+in [Filesystem access](https://www.opencadc.org/canfar/latest/platform/storage/filesystem/).
+Do not assume another deployment exposes SSH.
 
 ## Agent rules
 
 1. Never leave the only copy on `/scratch` — session end deletes it.
-2. Vault for **public/archive**; `/arc/projects` for **active team** work.
-3. Match method to size — web UI fails gracefully on multi-TB; use CLI.
+2. Use the site's publication VOSpace for releases and its persistent project
+   storage (CADC: `/arc/projects`) for active team work.
+3. For many files or long transfers, use a resumable/synchronizing workflow and
+   verify counts/checksums or destination metadata before cleanup.

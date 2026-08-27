@@ -21,7 +21,7 @@
       "id": "canfar-architecture",
       "path": "skills/canfar-architecture",
       "title": "Architecture",
-      "summary": "Portal, Skaha, K8s, storage tiers, tooling layers.",
+      "summary": "Code-backed map of Portal, Skaha, storage, APIs, and deployments.",
       "category": "platform"
     },
     {
@@ -35,7 +35,7 @@
       "id": "canfar-storage",
       "path": "skills/canfar-storage",
       "title": "Storage",
-      "summary": "Scratch, ARC home/projects, layout, SSHFS.",
+      "summary": "Scratch and deployment-specific persistent storage.",
       "category": "platform"
     },
     {
@@ -105,14 +105,14 @@
       "id": "canfar-python-client",
       "path": "skills/canfar-python-client",
       "title": "Python client",
-      "summary": "Session/AsyncSession API automation.",
+      "summary": "Session, AsyncSession, Context, Images, and storage APIs.",
       "category": "platform"
     },
     {
       "id": "canfar-doi",
       "path": "skills/canfar-doi",
       "title": "DOI publication",
-      "summary": "Data Publication Service, Vault releases.",
+      "summary": "CADC Data Publication Service and Vault releases.",
       "category": "platform"
     },
     {
@@ -147,7 +147,7 @@
       "id": "canfar-concurrency",
       "path": "skills/canfar-concurrency",
       "title": "Concurrency",
-      "summary": "Shared /arc/home, locks, NFS cautions.",
+      "summary": "Shared persistent homes, locks, filesystem cautions.",
       "category": "platform"
     },
     {

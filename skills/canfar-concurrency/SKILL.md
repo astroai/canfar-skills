@@ -1,16 +1,18 @@
 ---
 name: canfar-concurrency
 description: >
-  CANFAR shared /arc/home between sessions, scratch per session, file locking
-  on NFS, SQLite pitfalls, AstroAI agent setup locks and Ray control lock.
-  Use when two sessions open, concurrent writes, or where chat history lives.
+  CANFAR concurrent Sessions: shared persistent personal/project POSIX storage,
+  per-Session scratch, atomic writes and lock-heavy database pitfalls, plus
+  optional AstroAI setup/Ray locks. Use when two Sessions write concurrently,
+  files appear inconsistent, or the user asks what state is shared.
 ---
 # Concurrency & shared home
 
 ## Two sessions, one home
 
-Every **interactive** session mounts the **same** `/arc/home/<user>`.
-Each session has its **own** `/scratch` — never shared.
+At CADC, every interactive Session mounts the same `/arc/home/<user>`. Other
+deployments commonly mount the same persistent home below `/cavern`. Each
+Session has its own `/scratch`; use the live mount paths.
 
 | State | Location | Concurrent? |
 | --- | --- | --- |
@@ -21,9 +23,11 @@ Each session has its **own** `/scratch` — never shared.
 
 **Rule:** teammates share via `/arc/projects` or VOSpace — not `/scratch`.
 
-## NFS / CephFS cautions
+## Shared POSIX filesystem cautions
 
-- Avoid heavy **SQLite** or lock-heavy apps directly on `/arc/home` — use scratch or project paths with care.
+- The backing filesystem is deployment-specific. Avoid heavy **SQLite** or
+  lock-heavy apps on shared personal storage; use local scratch for active DB
+  state and copy durable exports/checkpoints back safely.
 - Use atomic writes (write temp + rename) for config files.
 - Large parallel writes to one directory can slow everyone — spread outputs.
 
@@ -52,5 +56,5 @@ Chat history on scratch **dies with the session**; configs on `/arc/home` **pers
 ## Agent rules
 
 1. Two sessions = two scratches; share via `/arc/projects` or `vcp`.
-2. Permission denied on project file → group membership (`canfar-groups`), not "wrong session".
+2. Permission denied on a project file → inspect identity, group, allocation, and POSIX mode.
 3. Do not run parallel `verify --fix` in two AstroAI sessions without expecting lock messages.

@@ -3,38 +3,48 @@ name: canfar-sessions
 description: >
   CANFAR interactive sessions: Notebook JupyterLab, Desktop GUI, CARTA radio,
   Firefly tables, Contributed apps, headless batch, flexible vs fixed resources,
-  GPU, session lifecycle, Science Portal and canfar create. Use when launching
+  GPU, Session lifecycle, Science Portal and canfar create. Use when launching
   sessions, choosing session type, CARTA Firefly desktop notebook.
 ---
 # Interactive sessions
 
-Docs: [Sessions overview](https://opencadc.github.io/canfar/latest/platform/sessions/)
+Docs: [Sessions overview](https://www.opencadc.org/canfar/latest/platform/sessions/)
+
+For a simple user, give the Science Portal path first: log in, choose a Session
+kind, select one of the images actually shown for that kind, name it, and launch.
+Use the CLI/API path for repeatability, batch work, or troubleshooting.
 
 ## Session types
 
 | Type | Interface | Best for |
 | --- | --- | --- |
-| **Notebook** | JupyterLab :8888 | Analysis, docs, prototyping |
+| **Notebook** | JupyterLab | Analysis, teaching, prototyping |
 | **Desktop** | Full Linux GUI | CASA, legacy GUI tools |
 | **CARTA** | Radio astronomy viewer | Cubes, masks, regions |
 | **Firefly** | Table/image viewer | Survey catalogs |
 | **Contributed** | Community web apps | marimo, VS Code web, custom |
 | **Headless** | No UI | Batch — see `canfar-batch` |
 
-Launch: Science Portal (your deployment's URL) or `canfar create`.
+Available kinds and images come from the live Skaha service; not every deployment
+offers every row. Discover with the Portal or `canfar image ls`.
 
 ## Lifecycle
 
-- **Start:** ~30 s–3 min (image pull first time)
-- **Runtime:** deployer-configured (`expirySeconds` in Skaha helm). Chart default **4 days** for interactive; CADC FAQ cites up to **7 days** — verify on your site. Headless default **14 days** in stock chart.
-- **End:** container deleted — **data on `/arc` and Vault persists**
+- **Start:** scheduling and image pulls can take seconds to minutes.
+- **Runtime:** deployment-configured. The current chart defaults interactive
+  Sessions to 4 days, but a live site may override it. Check the Portal or
+  `canfar info <session-id>` for the actual expiry. The current headless Job
+  template has a separate 14-day deadline.
+- **End:** container deleted — data copied to the site's persistent POSIX storage
+  or VOSpace remains subject to that service's policy
 
-Always persist to `/arc/projects` or `vos:` before delete.
+Always persist to the site's shared POSIX mount or VOSpace before deletion.
 
 ## Session count limits
 
-Interactive sessions (notebook, desktop, CARTA, Firefly, contributed) share a
-**per-user cap** (stock helm default **5**). Headless/batch is **exempt**.
+Interactive Sessions (notebook, desktop, CARTA, Firefly, contributed) share a
+**per-user cap**. The chart default is five; the live deployment is authoritative.
+Headless/batch is exempt from this particular Skaha check.
 At cap, **new creates are rejected** — delete idle sessions:
 
 ```bash
@@ -46,23 +56,27 @@ canfar delete <session-id>
 
 | Mode | When |
 | --- | --- |
-| **Flexible** (default) | Exploration, variable load |
-| **Fixed** (`--cpu`, `--memory`) | Predictable performance, deadlines |
+| **Flexible** (default) | Exploration and teaching; site policy supplies request/limit |
+| **Fixed** (`--cpu`, `--memory`) | Measured workloads needing a specific allocation |
 
 ```bash
+canfar image ls --kind notebook
 canfar create notebook skaha/astroml:latest
-canfar create --cpu 4 --memory 16 desktop skaha/astroml:latest
+canfar create notebook skaha/astroml:latest --cpu 4 --memory 16
 ```
 
 ## GPU
 
-Request GPU in session config; use CUDA-enabled images (e.g. `astroml-cuda`).
-Verify with `nvidia-smi` when allocated.
+Request GPU only when the Portal/context exposes GPUs and use an image compatible
+with that site's GPU stack. Verify with `nvidia-smi` inside the Session.
 
 ## Contributed applications
 
 Portal → **Contributed** → pick app. Web UI must listen on **port 5000**
-(Skaha probe contract). Community guide: [Contributed apps](https://opencadc.github.io/canfar/latest/platform/sessions/contributed.md)
+(Skaha probe contract). The service does not itself require
+`/skaha/startup.sh` for contributed Sessions; the image's configured command must
+start the service. Community guide:
+[Contributed apps](https://www.opencadc.org/canfar/latest/platform/sessions/contributed/)
 
 ## AstroAI images (optional subset)
 
@@ -78,7 +92,7 @@ Generic CANFAR users use `skaha/*` and team images from Harbor.
 
 ## Agent rules
 
-1. `/scratch` invisible to other sessions — not a bug.
+1. `/scratch` is invisible to other Sessions — not a bug.
 2. Match session type to workflow (CARTA for radio cubes, not Notebook alone).
 3. Pending after create → `canfar events <id>`, not just "wait" (queue, pull, probe).
 

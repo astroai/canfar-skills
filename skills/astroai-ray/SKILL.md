@@ -10,7 +10,9 @@ description: >-
 # CANFAR Ray with `astroai` (AstroAI images only)
 
 > **Scope:** Requires AstroAI session images with `astroai` CLI. For platform
-> headless/batch without Ray, use `canfar-batch`.
+> headless/batch without Ray, use `canfar-batch`. This is an AstroAI extension
+> built on CANFAR headless Sessions, not an OpenCADC core command. Its source of
+> truth is the current `astroai/canfar-lab` implementation and tests.
 
 One CLI. Installed on AstroAI session images.
 
@@ -61,7 +63,8 @@ astroai jobs logs <run-id>
 ```
 
 `--input` / `--output` URIs are stored on the Ray job. They are not copied.
-Put data on `/arc`. `/scratch` dies with the session.
+Put shared data on the deployment's persistent project mount (`/arc/projects`
+on the AstroAI CADC deployment). `/scratch` dies with the Session.
 
 ## Check, stop, dashboard
 

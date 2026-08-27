@@ -1,48 +1,67 @@
 ---
 name: canfar-cadc-data
 description: >
-  CADC astronomical archives on CANFAR: cadcget, cadcaccess, archive download,
-  VO services, relationship to CANFAR storage. Use when downloading survey data,
-  HST, CFHT, archive FITS, CADC catalog, not for VOSpace user files.
+  CADC astronomical archive discovery and download from CANFAR using the CADC
+  search portal, cadcget/cadcdata, TAP/cadctap, and persistent project storage.
+  Use for archive observations, survey FITS, CADC catalogs, or TAP queries; not
+  for a user's VOSpace files.
 ---
 # CADC archive data
 
-**CANFAR** = compute + team storage. **CADC archives** = observatory survey holdings.
+**CANFAR** provides compute, Sessions, and user/project storage. **CADC archives**
+provide curated observatory and survey holdings. The same identity can be used,
+but archive identifiers are not VOSpace paths.
 
-Archives: [CADC](https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/)
+Archive search: [CADC](https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/)
 
-## CLI (in CANFAR sessions)
+## Simple workflow
 
-Platform CLIs often include:
+1. Discover observations/files in the CADC search interface.
+2. Download into persistent project storage when collaborators or later Sessions
+   need the data.
+3. Stage hot working files into `/scratch` inside one Session.
+4. Copy results back to persistent storage or a publication VOSpace service.
+
+## `cadcget` syntax
+
+The current `opencadc/cadctools` implementation accepts one Storage Inventory
+identifier such as `COLLECTION/file` (or `cadc:COLLECTION/file`) and an optional
+output path. It does **not** take separate archive-ID and file-ID positional
+arguments.
 
 ```bash
-cadcget <archive-id> <file-id>   # download to cwd
-# browse services at CADC web portal first
+cadcget GEMINI/N20220825S0383.fits
+cadcget cadc:CFHT/700000o.fits.fz --output /arc/projects/mygroup/raw/
 ```
 
-Exact commands depend on image — `which cadcget`, `cadcget --help`.
+Check the installed version's exact options with `cadcget --help`. Use
+`cadc-get-cert` when the archive product requires authenticated CADC access.
 
-On **AstroAI** images: `/opt/astroai/venv/cadc` on PATH.
+## TAP and Python
 
-## Typical workflow
+Use `cadctap` for catalog/service queries and `cadcdata.StorageInventoryClient`
+for programmatic file retrieval. Service schemas and access policy are archive
+specific; inspect TAP metadata rather than inventing columns.
 
-1. Discover data via CADC search portal
-2. Download to **`/arc/projects/<group>/raw/`** (persistent, shared)
-3. Process on **`/scratch`** inside sessions
-4. Publish results → `/arc/projects/…/results/` or Vault (`canfar-doi`)
+```python
+from cadcdata import StorageInventoryClient
 
-## vs VOSpace
+client = StorageInventoryClient()
+client.cadcget("cadc:CFHT/700000o.fits.fz", "/scratch/700000o.fits.fz")
+```
 
-| | CADC archives | Your VOSpace (Vault/ARC) |
+## Archive versus VOSpace
+
+| | CADC archive | User/project VOSpace |
 | --- | --- | --- |
-| Content | Curated surveys | Your team files |
-| Access | Archive policies | Your groups/ACLs |
-| Tool | `cadcget`, TAP, … | `vcp`, POSIX |
+| Content | Curated observations/catalogs | User or team files |
+| Address | Collection/file identifiers, TAP rows | Storage Identifier paths or legacy `vos:` |
+| Current tools | `cadcget`, `cadcdata`, `cadctap` | `canfar data`, `canfar.storage`, legacy `vcp` |
 
 ## Agent rules
 
-1. Do not confuse archive IDs with `vos:` user paths.
-2. Large downloads → target **`/arc/projects`**, not home quota.
-3. Same **CADC identity** used for CANFAR login and archive access.
+1. Do not transform an archive identifier into a `vos:` path.
+2. Large/valuable downloads go to a persistent project allocation, not personal home.
+3. Confirm archive access policy before assuming authentication alone grants a product.
 
-Related: `canfar-storage`, `canfar-transfers`
+Related: `canfar-storage`, `canfar-transfers`, `canfar-vospace`
