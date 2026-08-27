@@ -9,9 +9,10 @@ description: >
 # Batch & headless processing
 
 **Headless** sessions run a command and exit — no Notebook, Desktop, or browser UI.
-Same containers and `/arc` mounts as interactive sessions.
+They use the site's Session images and configured persistent mounts. The examples
+below use CADC's `/arc/projects` mount; substitute the path shown by your site.
 
-Docs: [Batch processing](https://opencadc.github.io/canfar/latest/platform/sessions/batch/)
+Docs: [Batch processing](https://www.opencadc.org/canfar/latest/platform/sessions/batch/)
 
 ## CLI
 
@@ -19,29 +20,31 @@ Docs: [Batch processing](https://opencadc.github.io/canfar/latest/platform/sessi
 canfar login cadc
 
 # Flexible resources (default)
-canfar create --name reduce headless skaha/astroml:latest \
+canfar create headless skaha/astroml:latest --name reduce \
   -- python /arc/projects/mygroup/scripts/reduce.py
 
 # Fixed resources
-canfar create --name sim --cpu 16 --memory 64 headless skaha/astroml:latest \
+canfar create headless skaha/astroml:latest --name sim --cpu 16 --memory 64 \
   -- python /arc/projects/mygroup/scripts/simulation.py
 
 # Environment variables
-canfar create --name omp-test --cpu 4 --env OMP_NUM_THREADS=4 \
-  headless skaha/astroml:latest -- python /arc/projects/mygroup/run.py
+canfar create headless skaha/astroml:latest --name omp-test --cpu 4 \
+  --env OMP_NUM_THREADS=4 -- python /arc/projects/mygroup/run.py
 
 # Parallel replicas (independent slices, client max 512)
-canfar create --name study --replicas 10 headless skaha/astroml:latest \
+canfar create headless skaha/astroml:latest --name study --replicas 10 \
   -- python /arc/projects/mygroup/analyze.py
 ```
 
-Each replica gets `REPLICA_ID` and `REPLICA_COUNT` — use for deterministic splits.
-See [Distributed helpers](https://opencadc.github.io/canfar/latest/client/helpers.md).
+Each replica gets `REPLICA_ID` and `REPLICA_COUNT` — use them for deterministic
+splits. This behavior is defined by the current `canfar` client and Skaha Session
+templates; do not infer it from an older documentation example.
 
 `canfar run` and `canfar launch` are aliases for `canfar create`.
 
-Headless sessions **do not count** toward the interactive session cap. Stock helm
-default lifetime: **14 days** (separate from interactive expiry).
+Headless Sessions do not count toward Skaha's interactive Session cap. The
+current headless Job template has a 14-day deadline, but deployment queue and
+resource policy still determine what actually runs.
 
 ## Python client
 
@@ -66,14 +69,15 @@ Async: `AsyncSession` + `await session.events(ids, verbose=True)` — see `canfa
 
 ## Data paths
 
-- **Input/output on `/arc/projects/…`** — workers and collaborators can read
-- **`/scratch`** only inside that session's pod — not shared across batch jobs unless each job copies from `/arc`
+- Put input/output on the site's persistent project mount so replicas and
+  collaborators can read it (CADC example: `/arc/projects/…`).
+- `/scratch` belongs to one replica's pod and is not shared with other replicas.
 
 ## vs AstroAI Ray
 
 | | CANFAR batch (headless) | AstroAI Ray (`astroai-ray`) |
 | --- | --- | --- |
-| Platform | Any CANFAR user | AstroAI images + `astroai cluster` |
+| Platform | Core Skaha capability when enabled | AstroAI images + `astroai cluster` |
 | Model | One Skaha session per job/replica | Ray manager + workers |
 
 ## Best practices

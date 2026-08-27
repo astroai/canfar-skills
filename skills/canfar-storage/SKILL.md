@@ -1,30 +1,36 @@
 ---
 name: canfar-storage
 description: >
-  CANFAR storage: /scratch session SSD, /arc/home personal POSIX, /arc/projects
-  team POSIX, default quotas, persistence, scratch vs arc workflow, SSHFS. Use when
-  asking where to save files, sharing between sessions, scratch vs arc, data layout.
+  CANFAR storage: Session scratch, persistent personal and project POSIX mounts,
+  discovered VOSpace Storage Identifiers, persistence, data layout, and external
+  access. Use when asking where to save files, sharing between Sessions, scratch
+  vs ARC/Cavern, or organizing data.
 ---
 # CANFAR storage
 
-Docs: [Storage systems](https://opencadc.github.io/canfar/latest/platform/storage/)
+Docs: [Storage systems](https://www.opencadc.org/canfar/latest/platform/storage/)
 
-## Official tiers
+## User-facing tiers
 
-| Storage | Path | Default quota | Lifetime | Shared? |
-| --- | --- | --- | --- | --- |
-| **Scratch** | `/scratch` | ~200 GB / session | Session | **No** |
-| **ARC Home** | `/arc/home/<user>` | ~10 GB | Permanent | Yes (your sessions) |
-| **ARC Projects** | `/arc/projects/<group>` | ~200 GB+ (varies) | Permanent | **Yes** (group) |
-| **Vault** | `vos:…` | project-dependent | Permanent | VOSpace ACLs |
+| Storage | Common CADC path/name | Lifetime | Shared? |
+| --- | --- | --- | --- |
+| **Scratch** | `/scratch` | Session | **No** |
+| **Personal POSIX** | `/arc/home/<user>` | Deployment-managed | Your Sessions |
+| **Project POSIX** | `/arc/projects/<group>` | Project allocation | **Yes** (group) |
+| **VOSpace service** | `arc:`, `vault:`, or legacy `vos:` | Service policy | VOSpace ACLs |
+
+The Skaha chart calls the shared POSIX service Cavern and defaults to
+`/cavern/home` and `/cavern/projects`; CADC deploys it as ARC at `/arc`. Do not
+assume either path on another site. Quotas are deployment/allocation values—run
+`df -h` on the actual mount or use the site's storage UI.
 
 ## Decision guide
 
 ```text
-Teammate needs live access?     → /arc/projects/…
+Teammate needs live access?     → persistent project POSIX storage
 Large temp I/O this session?    → /scratch
-Config, certs, small dotfiles?  → /arc/home (keep small)
-Long-term archive / public URL? → Vault (canfar-vospace)
+Config, certs, small dotfiles?  → persistent personal home (keep small)
+Long-term/share/publish?        → a suitable VOSpace service
 ```
 
 ## Session workflow
@@ -48,15 +54,32 @@ cp results.csv /arc/projects/mygroup/results/
 └── docs/         # README, procedures
 ```
 
-## External access (SSHFS)
+For a non-CADC site, substitute the persistent root shown by that deployment.
 
-From your laptop, mount ARC via SSH — keys in `/arc/home/<user>/.ssh/authorized_keys`.
-Details: [Filesystem access](https://opencadc.github.io/canfar/latest/platform/storage/filesystem.md)
+## Storage Identifiers
+
+The CLI/API addresses configured VOSpace Services independently of mount paths:
+
+```bash
+canfar auth show
+canfar data ls -lh arc:/home/$USER
+canfar data cp local:/absolute/path/file.fits arc:/projects/mygroup/file.fits
+```
+
+CADC commonly discovers `arc` and `vault`; SRCNet prefers a `cavern` service.
+Sites may publish other globally unique Storage Identifiers.
+
+## External access
+
+CADC offers SSH/SSHFS access to ARC; other deployments may not. Follow the
+site-specific endpoint and key instructions rather than assuming the CADC host.
+Details: [Filesystem access](https://www.opencadc.org/canfar/latest/platform/storage/filesystem/)
 
 ## AstroAI note
 
 On AstroAI images: `$WORK` = `$SCRATCH/src` — project code survives container OOM.
-Agent CLIs on `$SCRATCH`; configs on `/arc/home`. See `canfar-concurrency`.
+Agent CLIs on `$SCRATCH`; configs on the persistent home (CADC: `/arc/home`).
+See `canfar-concurrency`.
 
 ## Commands
 
@@ -66,6 +89,7 @@ df -h /arc/projects/mygroup
 du -sh /arc/projects/mygroup/* | sort -h
 ```
 
-Quota increase: email `support@canfar.net` — see `canfar-quotas`.
+On CADC, quota/allocation requests go to `support@canfar.net`; other sites use
+their own operator or project process. See `canfar-quotas`.
 
 Related: `canfar-transfers`, `canfar-vospace`, `canfar-groups`

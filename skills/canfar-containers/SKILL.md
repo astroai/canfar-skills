@@ -1,66 +1,83 @@
 ---
 name: canfar-containers
 description: >
-  CANFAR containers and Harbor registry: astroml, casa, skaha images,
-  images.canfar.net, custom Docker builds, contributed web apps port 5000,
-  session image selection, reproducible environments. Use when picking container,
-  custom image, Harbor, Dockerfile, contributed application.
+  CANFAR Container Images and registries: discover images allowed by Skaha,
+  choose reproducible environments, use CADC Harbor when applicable, build team
+  images, and satisfy the contributed-app port 5000 contract. Use when picking
+  or publishing an image, using Harbor, writing a Dockerfile, or contributing
+  an application.
 ---
-# Containers & Harbor
+# Container Images and registries
 
-Docs: [Containers](https://opencadc.github.io/canfar/latest/platform/containers/)
+User guide: [Containers](https://www.opencadc.org/canfar/latest/platform/containers/)
 
-## Concepts
+## Choose from the live Skaha catalog
 
-- **Container** = reproducible OS + astronomy stack (Python, CASA, …)
-- **Runtime** = CANFAR mounts `/arc`, `/scratch`, `/cvmfs` (when enabled), allocates CPU/RAM
-- Build once → same environment for you, team, and batch jobs
-
-## Default platform images
-
-Registry (CADC default): [images.canfar.net](https://images.canfar.net) — deployer sets `registryHosts`.
-
-| Image | Use |
-| --- | --- |
-| `skaha/astroml:latest` | General Python / AstroPy stack |
-| `skaha/casa:*` | CASA radio astronomy |
-| `skaha/notebook:*` | Jupyter-focused |
-| Community contributed | Portal → Contributed dropdown |
+The Science Portal and Skaha image API list Container Images the user is allowed
+to launch:
 
 ```bash
-canfar create notebook skaha/astroml:latest
-canfar create --name casa desktop skaha/casa:6.5
+canfar image ls
+canfar image ls --kind notebook
 ```
 
-Two-part image names expand to `images.canfar.net/<name>` in the client.
+Registry hosts are deployment-configured. CADC uses
+[images.canfar.net](https://images.canfar.net); another site can allow one or
+several different hosts.
 
-## AstroAI contributed images (optional)
+```bash
+canfar create notebook images.canfar.net/skaha/astroml:latest
+```
 
-Harbor project `astroai`: `images.canfar.net/astroai/webterm`, `openresearch`, etc.
-See `canfar-sessions` — only when your site runs AstroAI catalog.
+Two-part image names currently expand to `images.canfar.net/<name>` in the
+`canfar` client. That is a CADC convenience, not deployment-neutral discovery.
+Use the full URI returned by the selected Server when scripting across sites.
+
+## What Skaha actually requires
+
+- The image must come from an allowed `registryHosts` entry.
+- Its registry metadata must make it visible for the requested Session kind.
+- The container runs as the authenticated user's mapped UID/GID and receives the
+  deployment's shared POSIX and scratch mounts.
+- Notebook/Desktop/CARTA/Firefly/contributed use distinct Job templates and probe
+  contracts; do not assume one image works for every kind.
 
 ## Custom images
 
-1. [Container build guide](https://opencadc.github.io/canfar/latest/platform/containers/build.md)
-2. Push to Harbor (project permissions via `canfar-permissions`)
-3. Launch with full image URI:
+1. Confirm an existing catalog image cannot satisfy the workflow.
+2. Build from a suitable base and test as a non-root runtime user.
+3. Push to the site's allowed Container Registry with the required project role
+   and Skaha type metadata.
+4. Confirm it appears in `canfar image ls --kind <kind>`.
+5. Launch by the full image URI.
 
 ```bash
-canfar create contributed images.canfar.net/mygroup/myapp:1.0
+canfar create headless images.canfar.net/mygroup/pipeline:1.0 \
+  -- python /arc/projects/mygroup/run.py
 ```
 
 ## Contributed web applications
 
-Skaha/Helm contract for contributed sessions:
+The current Skaha `launch-contributed.yaml` template exposes and probes TCP port
+**5000**. It does not invoke `/skaha/startup.sh`; the image's own ENTRYPOINT/CMD
+must start the web service. `/skaha/startup.sh` is used by the desktop-application
+launcher and remains a different image convention.
 
-- Web UI listening on **port 5000** (readiness probe)
-- Image ENTRYPOINT/CMD starts the app — no `/skaha/startup.sh` required by server
-- `/skaha/startup.sh` is a **desktop-app** image convention, not enforced for contributed
+This code-level contract supersedes older public guidance that required the
+startup script for contributed apps.
 
-Contact your deployment support before large custom-app efforts.
+## Optional Library Tools
 
-## Agent rules
+`opencadc/canfar-library` provides an optional scientist-first `library` CLI for
+manifest-driven `init → lint → build → scan → curate → push`. It is not a core
+Skaha runtime and may not be installed or released on the user's site; check
+`library --help` and its local version before recommending commands.
 
-1. Prefer **published tags** (`:latest` or version) over `:dev` in production.
-2. Pin image in papers/scripts for reproducibility.
-3. Heavy deps can live in **CVMFS** (`canfar-cvmfs`) when cluster mounts it.
+## Reproducibility and safety
+
+1. Prefer a version tag or digest over `:latest`/`:dev` for production science.
+2. Record the full image URI and ideally digest in workflow metadata and papers.
+3. Do not put credentials, private keys, or user data into image layers.
+4. Registry push permission and Skaha launch visibility are separate controls.
+
+Related: `canfar-permissions`, `canfar-sessions`, `canfar-cvmfs`

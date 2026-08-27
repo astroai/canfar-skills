@@ -2,26 +2,30 @@
 name: canfar-cvmfs
 description: >
   CVMFS on CANFAR: /cvmfs/soft.computecanada.ca Alliance software stack,
-  environment modules module load, read-only lazy mount, vs containers and /arc
-  installs. Use when accessing Alliance software, module load, or ls /cvmfs empty.
+  environment modules, read-only lazy mounts, and when to use containers or a
+  project environment instead. Use when accessing Alliance software, running
+  module load, or diagnosing an empty /cvmfs mount.
 ---
 # CVMFS software
 
-Docs: [CANFAR CVMFS guide](https://opencadc.github.io/canfar/latest/platform/cvmfs/)
+Public guide (orientation only):
+[CANFAR CVMFS](https://www.opencadc.org/canfar/latest/platform/cvmfs/)
 
 ## What it is
 
 **CernVM File System** — read-only, distributed software trees. Maintained by
 **Digital Research Alliance of Canada** on Alliance-backed clusters.
 
-- **Not** writable — install custom packages under `/arc/home` or project envs
-- **Not** a substitute for `/arc` project storage
+- **Not** writable — install custom packages in a persistent project environment
+- **Not** a substitute for project storage
 - **Complements** containers: lean image + shared stack on demand
 
 ## Deployment note
 
-CVMFS is **cluster infrastructure**, not configured in the Skaha helm chart.
-When your deployment mounts it, sessions see Alliance software at:
+CVMFS is optional **cluster infrastructure**, not a core Skaha API or a mount
+created by the current `science-platform` chart. Confirm it from the live Session
+filesystem or the deployment configuration. When mounted, Alliance software is
+commonly available at:
 
 ```bash
 source /cvmfs/soft.computecanada.ca/config/profile/bash.sh
@@ -49,7 +53,7 @@ Always start from documented paths; do not browse `/cvmfs` like `/usr`.
 | --- | --- |
 | **Container image** (Harbor `skaha/*`) | Reproducible stack baked in |
 | **CVMFS modules** | Alliance-maintained HPC stack without huge images |
-| **pixi/uv/conda on `/arc`** | Project-specific deps you control |
+| **pixi/uv/conda on persistent project storage** | Project-specific deps you control |
 
 ## AstroAI images
 
@@ -61,3 +65,4 @@ Use CVMFS when you need Alliance modules **not** in the image.
 1. Never `pip install` into `/cvmfs`.
 2. CVMFS cache is **per K8s node** — cold start on a new node may be slower.
 3. Batch jobs inherit CVMFS when the cluster mounts it.
+4. Do not promise CVMFS on a CANFAR/SRCNet site until the live deployment shows it.

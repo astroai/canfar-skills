@@ -8,7 +8,7 @@ description: >
 ---
 # Best practices
 
-Docs: [Best practices](https://opencadc.github.io/canfar/latest/platform/best-practices/)
+User guide: [Best practices](https://www.opencadc.org/canfar/latest/platform/best-practices/)
 
 ## Batch-friendly code
 
@@ -32,7 +32,8 @@ args = parser.parse_args()
 | 100 × (1 CPU, 4 GB) parallel jobs | 1 × (100 CPU, 400 GB) monolith |
 | `--replicas N` or many `canfar create` | One giant session |
 
-Platform schedules small jobs faster; failures checkpoint per chunk.
+This is a workload-shape heuristic, not a capacity promise. Query the live
+Context/queue and choose chunk sizes that can retry independently.
 
 ## Right-size resources
 
@@ -51,12 +52,12 @@ export MKL_NUM_THREADS=4
 
 ## Storage
 
-- Input catalog on **`/arc/projects`**
+- Input catalog on the site's persistent **project storage**
 - Stage hot files to **`/scratch`** per session
-- Results back to **`/arc`** or Vault
+- Results back to persistent project storage or a suitable VOSpace Service
 
 ## Containers
 
-Pin image URI in scripts/papers: `images.canfar.net/skaha/astroml:2025.03`
+Pin the full image URI and preferably digest in scripts/workflow metadata.
 
 Related: `canfar-batch`, `canfar-containers`, `canfar-limits`

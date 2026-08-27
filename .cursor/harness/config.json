@@ -1,0 +1,5 @@
+{
+  "verify_fast": ["python3 scripts/validate_skills.py"],
+  "verify": ["python3 scripts/validate_skills.py"],
+  "verify_full": []
+}

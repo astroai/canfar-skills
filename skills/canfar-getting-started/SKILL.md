@@ -2,21 +2,29 @@
 name: canfar-getting-started
 description: >
   Getting started on CANFAR: CADC or SRCNet account, request access, join a project
-  via PI/group, Science Portal first session, fair use, acknowledgement text.
+  via PI/group, Science Portal first Session, persistence, fair use, and
+  acknowledgement text.
   Use for new users, access request, how to begin, who can use CANFAR, cost.
 ---
 # Getting started on CANFAR
 
-## Who can use CANFAR
+Start with the user's deployment and role. A student joining an existing project
+usually needs an identity plus group membership; a PI requesting storage or large
+compute also needs a project/allocation conversation.
 
-- **Free** for astronomical research (fair-use and allocation limits apply)
-- Canadian astronomers and collaborators; SRCNet partners on their nodes
+## Who can use the CADC deployment
+
+- CANFAR access is provided for astronomical research under site policy and
+  allocation limits; it is not a general-purpose free cloud.
+- CADC serves Canadian astronomers and collaborators. SRCNet nodes have their own
+  eligibility and support paths.
 - Larger needs: [Alliance Resource Allocation](https://docs.alliancecan.ca/)
 
 ## Deployment note
 
-CANFAR is **open source** — sites run their own Science Portal (CADC, SRCNet, …).
-Examples below use **CADC** (`www.canfar.net`). SRCNet users typically:
+CANFAR is open source and sites configure their own Science Portal, identity,
+storage, Container Registry, and limits. Examples below use **CADC**
+(`www.canfar.net`). A current CLI can discover CADC and SRCNet Servers:
 
 ```bash
 pip install canfar
@@ -40,16 +48,21 @@ Email `support@canfar.net` with CADC username and brief research description.
 
 Ask your PI to add you to the project's **CADC group** (see `canfar-groups`).
 
-### 3. First session
+### 3. First Session
 
-1. Science Portal → log in (CADC: [canfar.net/science-portal](https://www.canfar.net/science-portal/))
-2. Choose session type (Notebook, Desktop, Contributed, …)
-3. Work under `/arc/projects/<group>/` or `/arc/home/<you>/`
-4. Use `/scratch` for temp processing — **copy results to `/arc` before ending**
+1. Open the Science Portal and log in (CADC:
+   [canfar.net/science-portal](https://www.canfar.net/science-portal/)).
+2. Choose an available Session kind and Container Image. For a first visit,
+   Notebook plus a general astronomy image is usually the least surprising.
+3. Find the site's persistent personal/project mount (CADC: `/arc/home` and
+   `/arc/projects`; many Skaha sites use `/cavern`).
+4. Use `/scratch` only for temporary processing and copy results to persistent
+   storage before deleting or letting the Session expire.
 
 ```bash
 canfar login cadc
-canfar create --name first-test notebook skaha/astroml:latest
+canfar image ls --kind notebook
+canfar create notebook skaha/astroml:latest --name first-test
 canfar ps
 ```
 
@@ -66,10 +79,10 @@ canfar ps
 
 > The authors acknowledge the use of the Canadian Advanced Network for Astronomy Research (CANFAR) Science Platform operated by the Canadian Astronomy Data Centre (CADC) and the Digital Research Alliance of Canada…
 
-Full text: [CANFAR home](https://opencadc.github.io/canfar/)
+Full text: [CANFAR home](https://www.opencadc.org/canfar/latest/)
 
 ## Help
 
-- [Getting started guide](https://opencadc.github.io/canfar/latest/platform/get-started/)
-- [FAQ](https://opencadc.github.io/canfar/latest/platform/support/faq/)
+- [Getting started guide](https://www.opencadc.org/canfar/latest/platform/get-started/)
+- [FAQ](https://www.opencadc.org/canfar/latest/platform/support/faq/)
 - CADC: `support@canfar.net` · deployment Discord (see your portal)

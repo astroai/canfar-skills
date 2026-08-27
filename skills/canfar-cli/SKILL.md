@@ -1,17 +1,18 @@
 ---
 name: canfar-cli
 description: >
-  canfar CLI: login, auth show ls rm, create delete ps open sessions, stats
-  info events, canfar data cp ls rm with arc vault local paths, Science Portal
-  alternative. Use when driving CANFAR from terminal or scripting sessions.
+  canfar CLI: login, Authentication and Server Selection, image discovery,
+  create/delete/inspect Sessions, platform stats, and data operations with
+  Storage Identifiers. Use when driving CANFAR from a terminal or scripting;
+  use the Science Portal path for browser-first users.
 ---
 # CANFAR CLI
 
-Docs: [opencadc.github.io/canfar](https://opencadc.github.io/canfar/)
+Docs: [www.opencadc.org/canfar](https://www.opencadc.org/canfar/latest/)
 
-Install: platform images include it; locally via `pip install canfar`.
+Platform images often include it; locally install with `pip install canfar`.
 
-## Auth
+## Authentication and Server Selection
 
 ```bash
 canfar login
@@ -19,34 +20,43 @@ canfar login cadc
 canfar login srcnet
 canfar auth show
 canfar auth ls
-canfar auth rm cadc          # remove saved credentials for an IDP
-canfar auth purge --force    # clear all saved auth
+canfar server ls
+canfar server use <server-name-or-ivoa-uri>
+canfar auth rm cadc          # remove one Authentication record
+canfar auth purge --force    # reset all Authentication/Server state
 ```
 
-Credentials persist under `/arc/home` (e.g. `~/.canfar/config.yaml`) — shared
-across your sessions. There is no `canfar logout` — use `auth rm` or `auth purge`.
+Configuration lives at `~/.canfar/config.yaml`. It persists across Sessions only
+when the deployment mounts a persistent home there (CADC does). There is no
+`canfar logout`; use `auth rm` or `auth purge`.
 
-See `canfar-auth` for IDP, certificates, server selection.
+See `canfar-auth` for Identity Providers, certificates, and discovery.
 
-## Sessions
+## Sessions and images
 
 ```bash
+canfar image ls --kind notebook
 canfar create notebook skaha/astroml:latest
-canfar create --name mydesk --cpu 4 --memory 16 desktop skaha/astroml:latest
+canfar create notebook skaha/astroml:latest --name analysis --cpu 4 --memory 16
 canfar ps
 canfar ps --json
 canfar open <session-id>
-canfar delete <session-id>
 canfar info <session-id>
 canfar events <session-id>
+canfar logs <session-id>
 canfar stats
+canfar delete <session-id>
 ```
 
-Session types: `canfar-sessions`. Batch/headless: `canfar-batch`.
+`canfar stats` reports platform capacity, not one Session's cgroup or a storage
+quota. Use `canfar info` plus in-Session checks for those.
 
-## Data movement (`canfar data`)
+Session kinds: `canfar-sessions`. Headless jobs: `canfar-batch`.
 
-Operands use **storage identifier + absolute path** — bare `/arc/...` is rejected:
+## Data operations
+
+Operands use **Storage Identifier + absolute service path**. Bare `/arc/...`, an
+`active:` alias, and a `canfar storage` command are not supported.
 
 ```bash
 canfar data ls -lh arc:/home/$USER
@@ -54,31 +64,37 @@ canfar data cp local:/absolute/path/file.fits arc:/projects/mygroup/file.fits
 canfar data cp vault:/folder/file.fits arc:/home/$USER/file.fits
 ```
 
-Inside a session, use POSIX `cp` between `/scratch` and `/arc`. For `vcp`/`vls`
-see `canfar-vospace`. Large transfers: `canfar-transfers`.
+Identifiers come from VOSpace Services discovered for configured Servers. CADC
+normally exposes `arc` and `vault`; another deployment may expose `cavern` or a
+site-defined name.
+
+Cross-source `mv` and recursive `rm` are intentionally unsupported. Copy, verify
+the destination, and perform a separate authorized removal when needed.
+
+Inside a Session, use POSIX `cp` between `/scratch` and persistent storage. For
+legacy `vcp`/`vls`, see `canfar-vospace`.
 
 ## Automation
 
 ```bash
-canfar auth show    # verify before scripts
-canfar ps --json    # parse session list
+canfar auth show --json
+canfar ps --json
 ```
 
-Non-interactive jobs: login once in that `/arc/home`, then reuse credentials.
+Machine-output lists have no ordering guarantee. Select by stable Server URI,
+Session ID, Storage Identifier, or another explicit field.
 
-## vs other tools
+## Tool boundaries
 
 | Tool | Scope |
 | --- | --- |
-| `canfar` | Platform: auth, sessions, data |
-| `vcp` / Python `vos` | VOSpace |
-| `cadcget` | CADC **archives** |
-| `astroai` | **AstroAI images only** — env, Ray, agents |
-
-`astroai status` (when present) embeds `canfar auth show` and `canfar ps`.
+| `canfar` | Authentication, Server Selection, Sessions, images, VOSpace data |
+| `vcp` / Python `vos` | Legacy CADC VOSpace workflows |
+| `cadcget` / `cadctap` | CADC archives and TAP services |
+| `astroai` | Optional AstroAI image extension, not OpenCADC core |
 
 ## Agent rules
 
-1. Prefer `canfar ps` over guessing session IDs from URLs.
-2. User on laptop → `canfar login` works; no `/arc` until in a session.
-3. Destructive ops (`delete`) — confirm session ID from `canfar ps`.
+1. Prefer `canfar ps` over guessing Session IDs from URLs.
+2. A laptop can use the client/data API but does not have Session mount paths.
+3. Before `delete`, confirm the exact Session ID and whether scratch-only data matters.
