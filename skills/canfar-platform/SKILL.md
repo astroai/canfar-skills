@@ -110,6 +110,6 @@ On **AstroAI** images also: `astroai status --json` · `less /opt/astroai/USAGE.
 ## Install / update
 
 ```bash
-astroai agent plugins install canfar-platform   # default on AstroAI setup
-astroai agent plugins update canfar-platform
+npx skills add astroai/canfar-skills
+npx skills update   # when available / as needed
 ```

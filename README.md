@@ -16,20 +16,22 @@ to discover what a CADC, SRCNet, or compatible Skaha deployment actually exposes
 
 ## Install
 
-**AstroAI (recommended)** — auto on `astroai agent setup`, or:
-
-```bash
-astroai agent plugins install canfar-platform
-astroai agent plugins update canfar-platform
-```
-
-**Manual** (Cursor / other agents):
-
 ```bash
 npx skills add astroai/canfar-skills
 ```
 
-## Skills (23)
+AstroAI agent plugins do **not** install skills — they configure MCP servers,
+CLI tools, and Cursor rules only. Pair optional packs as needed:
+
+```bash
+npx skills add DietrichGebert/ponytail
+astroai agent plugins install ponytail-rule
+
+npx skills add probabl-ai/skills
+astroai agent plugins install skore-cli
+```
+
+## Skills
 
 | Skill | Topic |
 |-------|--------|
@@ -56,6 +58,8 @@ npx skills add astroai/canfar-skills
 | `canfar-concurrency` | Shared persistent homes, locks |
 | `canfar-troubleshooting` | Common failures |
 | `astroai-ray` | Ray cluster via `astroai` (AstroAI images only) |
+| `astroai-lab-workflow` | Session workflow: pixi/uv, save/resume, agents |
+| `ml-experimentation` | ML intent router (pairs with `probabl-ai/skills`) |
 
 Public platform guide (check behavior against current code):
 [www.opencadc.org/canfar](https://www.opencadc.org/canfar/latest/)

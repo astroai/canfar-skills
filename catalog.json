@@ -1,7 +1,7 @@
 {
   "name": "canfar-skills",
-  "version": "0.2.0",
-  "description": "CANFAR Science Platform skills for agents — all deployments, plain-language routing.",
+  "version": "0.3.0",
+  "description": "CANFAR Science Platform skills for agents \u2014 all deployments, plain-language routing.",
   "skills": [
     {
       "id": "canfar-platform",
@@ -163,13 +163,27 @@
       "title": "Ray compute (AstroAI)",
       "summary": "Ray cluster and jobs via astroai.",
       "category": "platform"
+    },
+    {
+      "id": "astroai-lab-workflow",
+      "path": "skills/astroai-lab-workflow",
+      "title": "AstroAI lab workflow",
+      "summary": "Session workflow: pixi/uv, save/resume, Ray, agents.",
+      "category": "platform"
+    },
+    {
+      "id": "ml-experimentation",
+      "path": "skills/ml-experimentation",
+      "title": "ML experimentation router",
+      "summary": "Plain-language router for Probabl / skore ML skills.",
+      "category": "ml"
     }
   ],
   "workflows": [
     {
       "id": "canfar-platform",
       "title": "CANFAR Platform Companion",
-      "summary": "Sessions, storage, groups, transfers, permissions — ask in plain language.",
+      "summary": "Sessions, storage, groups, transfers, permissions \u2014 ask in plain language.",
       "includes": [
         "canfar-platform",
         "canfar-getting-started",
@@ -193,7 +207,9 @@
         "canfar-best-practices",
         "canfar-concurrency",
         "canfar-troubleshooting",
-        "astroai-ray"
+        "astroai-ray",
+        "astroai-lab-workflow",
+        "ml-experimentation"
       ]
     }
   ]
