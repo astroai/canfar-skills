@@ -24,8 +24,7 @@ Usual path: one autoscaling manager, then a job with `--cpus`.
 
 ```bash
 astroai cluster start
-export ASTROAI_RAY_JOBS_ADDRESS=…    # skip inside the manager
-astroai run train.py --cpus 2
+astroai run train.py --cpus 2   # discovers the Running manager automatically
 ```
 
 `cluster start` writes `~/.config/canfar/lab/ray-manager.env`, creates the
@@ -42,8 +41,8 @@ astroai cluster start --max-workers 8 --cores 2 --ram 8
 astroai cluster start --min-workers 1 --gpus 1 --timeout 1800
 ```
 
-Prints `export ASTROAI_RAY_JOBS_ADDRESS=…`. The caller must export it in
-their shell (a CLI cannot export into the parent). `--json` returns
+Prints `export ASTROAI_RAY_JOBS_ADDRESS=…` (optional override). Discovery is
+automatic when a manager is Running. `--json` returns
 `manager_url`, `jobs_address`, `dashboard_url`, `cluster_phase`,
 `joined_workers`, and `autoscaling`.
 
@@ -55,7 +54,6 @@ re-run `cluster start` so the new manager sources the env file.
 ## Run a job
 
 ```bash
-export ASTROAI_RAY_JOBS_ADDRESS=…    # from start; skip inside the manager
 astroai run train.py --cpus 2
 astroai jobs submit --cmd 'python -m mosaic.stack --in /arc/projects/g/in' --wait
 astroai jobs list
