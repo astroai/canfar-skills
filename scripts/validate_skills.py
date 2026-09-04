@@ -14,9 +14,28 @@ SKILLS = ROOT / "skills"
 CATALOG = ROOT / "catalog.json"
 PLUGIN = ROOT / ".cursor-plugin" / "plugin.json"
 
+# This repo is OpenCADC/CANFAR platform skills. GitHub path astroai/canfar-skills
+# is allowed; the AstroAI product CLI, images, and extension skills are not.
+_ALLOWED_ASTROAI = re.compile(r"astroai/canfar-skills", re.IGNORECASE)
+_PRODUCT_LEAK = re.compile(
+    r"astroai-ray|astroai-lab|/opt/astroai|`astroai`|AstroAI|"
+    r"(?<![/\w.])astroai(?!/canfar-skills)|"
+    r"\bRay\b|\$WORK",
+    re.IGNORECASE,
+)
+
 
 def fail(message: str) -> None:
     print(f"ERROR: {message}", file=sys.stderr)
+
+
+def _leak_spans(text: str) -> list[str]:
+    hits: list[str] = []
+    for match in _PRODUCT_LEAK.finditer(text):
+        if _ALLOWED_ASTROAI.match(text, match.start()):
+            continue
+        hits.append(match.group(0))
+    return hits
 
 
 def main() -> int:
@@ -38,6 +57,11 @@ def main() -> int:
             f"directory-only={sorted(set(directories) - set(ids))}"
         )
         errors += 1
+
+    for skill_id in ids:
+        if isinstance(skill_id, str) and skill_id.startswith("astroai"):
+            fail(f"{skill_id}: AstroAI extension skills do not belong in this repo")
+            errors += 1
 
     for entry in entries:
         skill_id = entry["id"]
@@ -72,6 +96,12 @@ def main() -> int:
             fail(f"{skill_id}: unbalanced fenced code block")
             errors += 1
 
+        for md in sorted(directory.rglob("*.md")):
+            leaks = _leak_spans(md.read_text())
+            if leaks:
+                fail(f"{md.relative_to(ROOT)}: AstroAI product leak {leaks!r}")
+                errors += 1
+
         for target in link_pattern.findall(text):
             clean_target = target.split("#", 1)[0]
             if clean_target and not (directory / clean_target).exists():
@@ -92,6 +122,13 @@ def main() -> int:
             fail(f"catalog and plugin {key!r} values differ")
             errors += 1
 
+    readme = ROOT / "README.md"
+    if readme.is_file():
+        leaks = _leak_spans(readme.read_text())
+        if leaks:
+            fail(f"README.md: AstroAI product leak {leaks!r}")
+            errors += 1
+
     if errors:
         print(f"Validation failed with {errors} error(s).", file=sys.stderr)
         return 1
@@ -99,5 +136,17 @@ def main() -> int:
     return 0
 
 
+def _self_check() -> None:
+    # GitHub install path is this repo; the product CLI is not.
+    assert _leak_spans("npx skills add astroai/canfar-skills") == []
+    assert _leak_spans("https://github.com/astroai/canfar-skills") == []
+    assert _leak_spans("astroai status --json") == ["astroai"]
+    assert _leak_spans("AstroAI images") == ["AstroAI"]
+    assert _leak_spans("see astroai-ray") == ["astroai-ray"]
+    assert _leak_spans("Ray cluster") == ["Ray"]
+    assert _leak_spans("cd $WORK/mylab") == ["$WORK"]
+
+
 if __name__ == "__main__":
+    _self_check()
     raise SystemExit(main())

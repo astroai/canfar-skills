@@ -52,6 +52,7 @@ Use the full URI returned by the selected Server when scripting across sites.
 5. Launch by the full image URI.
 
 ```bash
+# CADC example path; substitute the site's persistent project mount.
 canfar create headless images.canfar.net/mygroup/pipeline:1.0 \
   -- python /arc/projects/mygroup/run.py
 ```

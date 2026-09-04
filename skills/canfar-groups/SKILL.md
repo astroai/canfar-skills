@@ -21,7 +21,7 @@ a different user interface. Ask the PI/project admin or follow the site's portal
 | Role | Can do |
 | --- | --- |
 | **Administrator** | Add/remove members, assign admins, manage group resources |
-| **Member** | Use shared resources the group grants (e.g. `/arc/projects/…`) |
+| **Member** | Use shared resources the group grants (CADC example: `/arc/projects/…`) |
 
 ## CADC: create a research group
 
@@ -44,7 +44,7 @@ a different user interface. Ask the PI/project admin or follow the site's portal
 
 - Skaha obtains the user's supplemental groups through the deployment's identity,
   GMS/permissions, and POSIX Mapper integration.
-- A project path such as `/arc/projects/<project>/` is a managed allocation with
+- A project path such as `/arc/projects/<project>/` (CADC) is a managed allocation with
   filesystem ownership and quota; group membership alone does not create it.
 - New membership may take time to reach caches or may require a fresh Session.
 - Creating a project allocation is **not** `mkdir` — admin/allocation workflow (see `canfar-permissions`)

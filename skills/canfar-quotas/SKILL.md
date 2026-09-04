@@ -13,12 +13,15 @@ Docs: [Storage overview](https://www.opencadc.org/canfar/latest/platform/storage
 ## Do not guess the quota
 
 CADC commonly provides a small personal home and separately allocated project
-space. The current Skaha chart has a 10 GiB first-user storage default and a
-200 GiB non-desktop ephemeral-storage ceiling, but operators override these and
-desktop scratch uses a different template. Those numbers are implementation
-defaults, not the user's live allocation.
+space. The Cavern chart default first-user allocation is 10 GiB (`defaultSizeGB`).
+The Skaha chart's 200 GiB non-desktop ephemeral-storage ceiling is a Job-template
+default; desktop scratch uses a different template. Operators override these.
+Those numbers are implementation defaults, not the user's live allocation — run
+`df` or the site UI.
 
 ## Check usage (all users)
+
+CADC paths (substitute the site's persistent home/project mount):
 
 ```bash
 df -h /arc/home/$USER
@@ -51,16 +54,8 @@ or Session scratch. Substitute the site's persistent path for `/arc`.
 
 Full scratch ≠ home full. Scratch resets each session — delete temp files freely.
 
-## AstroAI images (optional)
-
-```bash
-astroai status --json   # home %, project lines, vault nodes, ceph xattrs
-astroai clean --yes     # ~/.cache on home only
-```
-
-Ceph `ceph.dir.rbytes` may lag seconds after large writes — refresh status.
-
-Agent setup may refuse at home ≥98% full.
+On Ceph-backed homes, directory `rbytes` may lag after large writes — refresh
+`df` rather than assuming the quota percent is stale forever.
 
 ## Agent rules
 

@@ -33,6 +33,8 @@ with quota, group mapping, and filesystem ownership:
 
 ## POSIX persistent storage
 
+CADC example:
+
 ```bash
 ls -la /arc/projects/mygroup/
 chmod 664 shared.fits
@@ -60,7 +62,7 @@ Public release: explicit **other-read** on Vault — see `canfar-vospace`.
 Same CADC identity for CLI, Python client, and archives.
 Tokens/certs — `canfar-auth`.
 
-## Ray / shared compute
+## Headless identity
 
 Batch and headless jobs run as **your** identity — input paths on persistent
 project storage (CADC: `/arc/projects`) must be readable by you (and the group

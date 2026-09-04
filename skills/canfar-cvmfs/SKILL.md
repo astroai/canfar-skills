@@ -55,14 +55,9 @@ Always start from documented paths; do not browse `/cvmfs` like `/usr`.
 | **CVMFS modules** | Alliance-maintained HPC stack without huge images |
 | **pixi/uv/conda on persistent project storage** | Project-specific deps you control |
 
-## AstroAI images
-
-AstroAI ships stacks in `/opt/astroai/venv/*` and project **pixi/uv** under `$WORK`.
-Use CVMFS when you need Alliance modules **not** in the image.
-
 ## Agent rules
 
 1. Never `pip install` into `/cvmfs`.
-2. CVMFS cache is **per K8s node** — cold start on a new node may be slower.
+2. CVMFS cache is **per worker node** — cold start on a new node may be slower.
 3. Batch jobs inherit CVMFS when the cluster mounts it.
 4. Do not promise CVMFS on a CANFAR/SRCNet site until the live deployment shows it.

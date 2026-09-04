@@ -39,14 +39,15 @@ The current `science-platform` chart/templates provide these reference defaults:
 | Active interactive Sessions | 5 per user | create error / Portal |
 | Non-desktop ephemeral ceiling | 200 GiB | `df -h /scratch` |
 | Desktop ephemeral storage | Separate smaller Job template value | `df -h /scratch` |
-| Flexible CPU/RAM | LimitRange + live Context | `Context().resources()` |
+| Flexible CPU/RAM | Site resource policy + live Context | `Context().resources()` |
 
-Operators can override the chart settings, queue policy, LimitRange, GPU pools,
+Operators can override the chart settings, queue policy, resource limits, GPU pools,
 and node capacity. Do not promise these values to a user.
 
-Headless Sessions are exempt from Skaha's interactive Session-count check. The
-current client accepts at most 512 replicas in one request, but a deployment or
-queue can accept fewer in practice.
+Headless creates and existing desktop-app Sessions (in-Desktop software, not
+Desktop itself) are exempt from Skaha's interactive Session-count check. Desktop
+sessions still count. The current client accepts at most 512 replicas in one
+request, but a deployment or queue can accept fewer in practice.
 
 ## Flexible versus fixed
 
@@ -59,8 +60,8 @@ queue can accept fewer in practice.
 canfar create notebook skaha/astroml:latest --cpu 4 --memory 16
 ```
 
-A larger fixed request can wait longer in Kueue or fail if the site does not
-offer that combination. Check `canfar events <id>`.
+A larger fixed request can wait longer in the site queue or fail if the site does
+not offer that combination. Check `canfar events <id>`.
 
 ## OOM, disk full, or quota
 
@@ -78,4 +79,5 @@ Scratch full, home quota, and cluster capacity are different problems.
 1. Distinguish requested resources, cgroup limits, platform capacity, and storage quotas.
 2. Use the live Context/Portal before recommending a resource value.
 3. For independent work, prefer headless replicas over one impractically large Session.
-4. `/scratch` may survive a container restart but not Session deletion/expiry.
+4. `/scratch` may survive an **interactive** container restart; headless Jobs do
+   not restart. Session delete/expiry always wipes it.

@@ -26,6 +26,8 @@ Browser limits, transfer endpoints, and SSH access are deployment-specific.
 
 ## Inside a session
 
+CADC example:
+
 ```bash
 cp /arc/projects/mygroup/raw/large.fits /scratch/
 # ... process ...
@@ -63,8 +65,9 @@ curl --cert ~/.ssl/cadcproxy.pem --upload-file file.fits \
   https://ws-uv.canfar.net/arc/files/projects/mygroup/file.fits
 ```
 
-This is a service-specific escape hatch, not the default recommendation. Hosts,
-paths, transfer negotiation, and auth modes vary; prefer the discovered client.
+This is a service-specific escape hatch, not the default recommendation. Do not
+copy this host to another site. Prefer `canfar data` and discovered Storage
+Identifiers.
 
 ## SSHFS (from your laptop)
 

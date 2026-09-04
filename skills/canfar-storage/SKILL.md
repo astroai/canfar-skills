@@ -35,9 +35,11 @@ Long-term/share/publish?        → a suitable VOSpace service
 
 ## Session workflow
 
+CADC example (substitute the site's persistent project mount):
+
 ```bash
 cp /arc/projects/mygroup/raw/big.fits /scratch/
-pixi run python analyze.py /scratch/big.fits
+python analyze.py /scratch/big.fits
 cp results.csv /arc/projects/mygroup/results/
 ```
 
@@ -75,13 +77,9 @@ CADC offers SSH/SSHFS access to ARC; other deployments may not. Follow the
 site-specific endpoint and key instructions rather than assuming the CADC host.
 Details: [Filesystem access](https://www.opencadc.org/canfar/latest/platform/storage/filesystem/)
 
-## AstroAI note
-
-On AstroAI images: `$WORK` = `$SCRATCH/src` — project code survives container OOM.
-Agent CLIs on `$SCRATCH`; configs on the persistent home (CADC: `/arc/home`).
-See `canfar-concurrency`.
-
 ## Commands
+
+CADC paths:
 
 ```bash
 df -h /arc/home/$USER
