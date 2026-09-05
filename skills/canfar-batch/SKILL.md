@@ -4,7 +4,7 @@ description: >
   CANFAR batch and headless sessions: canfar create headless, pass command after
   --, replicas REPLICA_ID, fixed CPU memory, environment variables, Python Session
   batch jobs. Use for non-interactive processing, parallel jobs, automation,
-  production pipelines — not AstroAI Ray (see astroai-ray).
+  production pipelines.
 ---
 # Batch & headless processing
 
@@ -71,14 +71,7 @@ Async: `AsyncSession` + `await session.events(ids, verbose=True)` — see `canfa
 
 - Put input/output on the site's persistent project mount so replicas and
   collaborators can read it (CADC example: `/arc/projects/…`).
-- `/scratch` belongs to one replica's pod and is not shared with other replicas.
-
-## vs AstroAI Ray
-
-| | CANFAR batch (headless) | AstroAI Ray (`astroai-ray`) |
-| --- | --- | --- |
-| Platform | Core Skaha capability when enabled | AstroAI images + `astroai cluster` |
-| Model | One Skaha session per job/replica | Ray manager + workers |
+- `/scratch` belongs to one replica Session and is not shared with other replicas.
 
 ## Best practices
 

@@ -75,7 +75,6 @@ VOSpace capabilities, durability, public access, and quota depend on the service
 | `canfar data` / Python `canfar.storage` | Current Storage Identifier and fsspec workflow |
 | `vcp` / `vls` | Legacy CADC VOSpace I/O |
 | `cadcget` / TAP | CADC **archives** (not your vos space) |
-| **`astroai`** | **AstroAI images only** — env, agents, Ray |
 
 Do not conflate `canfar ps` (all your sessions) with in-session monitors.
 
@@ -101,16 +100,6 @@ Skaha and Science Portal charts; current Skaha behavior lives in
   resources, and service endpoints. The Portal and client expose the live result.
 
 Use defaults to explain architecture, never to promise capacity to a user.
-
-## AstroAI on CANFAR (optional extension)
-
-Some sites ship AstroAI Harbor images (`images.canfar.net/astroai/*`):
-
-- `$WORK` = `$SCRATCH/src` — project code (survives container OOM)
-- `$SCRATCH` — per-session data and agent runtimes
-- `$HOME` = `/arc/home/<you>` — small persistent config
-
-See `canfar-concurrency`, `astroai-ray`.
 
 ## Agent rules
 

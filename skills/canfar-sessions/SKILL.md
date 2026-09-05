@@ -44,7 +44,9 @@ Always persist to the site's shared POSIX mount or VOSpace before deletion.
 
 Interactive Sessions (notebook, desktop, CARTA, Firefly, contributed) share a
 **per-user cap**. The chart default is five; the live deployment is authoritative.
-Headless/batch is exempt from this particular Skaha check.
+Headless/batch creates and existing **desktop-app** Sessions (software launched
+inside a Desktop — not the Desktop session itself) are exempt from this
+particular Skaha check. Desktop sessions still count toward the cap.
 At cap, **new creates are rejected** — delete idle sessions:
 
 ```bash
@@ -77,18 +79,6 @@ Portal → **Contributed** → pick app. Web UI must listen on **port 5000**
 `/skaha/startup.sh` for contributed Sessions; the image's configured command must
 start the service. Community guide:
 [Contributed apps](https://www.opencadc.org/canfar/latest/platform/sessions/contributed/)
-
-## AstroAI images (optional subset)
-
-When your site ships AstroAI Harbor catalog:
-
-| Image | Notes |
-| --- | --- |
-| `openresearch` | Hub at `/astroai-agents/` |
-| `webterm`, `vscode`, `marimo`, `notebook` | See `/opt/astroai/USAGE.md` |
-| `ray-manager` | With `astroai-ray` |
-
-Generic CANFAR users use `skaha/*` and team images from Harbor.
 
 ## Agent rules
 

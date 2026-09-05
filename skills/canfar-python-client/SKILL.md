@@ -45,7 +45,7 @@ ids = session.create(
     image="images.canfar.net/skaha/astroml:latest",
     kind="headless",
     cmd="python",
-    args="/arc/projects/mygroup/scripts/reduce.py",
+    args="/arc/projects/mygroup/scripts/reduce.py",  # CADC example path
     cores=4,
     ram=16,
     env={"OMP_NUM_THREADS": "4"},
@@ -68,7 +68,7 @@ async with AsyncSession() as session:
         image="images.canfar.net/skaha/astroml:latest",
         kind="headless",
         cmd="python",
-        args="/arc/projects/demo/run.py",
+        args="/arc/projects/demo/run.py",  # CADC example path
     )
     if ids:
         await session.events(ids, verbose=True)

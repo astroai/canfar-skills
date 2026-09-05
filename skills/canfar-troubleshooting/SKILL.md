@@ -23,14 +23,6 @@ df -h /arc/home/$USER /scratch 2>/dev/null
 du -sh /arc/home/$USER/* 2>/dev/null | sort -h | tail
 ```
 
-On **AstroAI** images add:
-
-```bash
-astroai status --json
-astroai env export
-less /opt/astroai/USAGE.md
-```
-
 ## Symptom → action
 
 | Symptom | Likely cause | Action |
@@ -39,7 +31,7 @@ less /opt/astroai/USAGE.md
 | Files gone after Session delete | Never copied to persistent storage | Lost if only on scratch—persist next time |
 | Home save/login fails | Home quota full | `df`/`du`; move data to project; `canfar-quotas` |
 | **Create rejected** "maximum … sessions" | Interactive session cap hit | `canfar ps`; delete idle sessions |
-| New session **Pending** long | Queue, image pull, probe, Kueue | `canfar events <id>`; not always "cap" |
+| New session **Pending** long | Site queue, image pull, or probe | `canfar events <id>`; not always "cap" |
 | **Permission denied** on project | Identity, membership, allocation, or POSIX mode | `id`; `ls -ld`; `canfar-groups`/`permissions` |
 | `canfar login` fails | Authentication or Server discovery/selection | `canfar-auth`; debug login; `server ls` |
 | `vcp` / Vault slow or fails | Large file via web UI | `canfar-transfers`; CLI `vcp` |

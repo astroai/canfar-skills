@@ -19,9 +19,6 @@ level and do not recite this map.
 | `opencadc/canfar-library` | Scientist-first, manifest-driven container build/publish tooling | Optional `library` CLI workflow; check its release status before recommending it as installed |
 | `opencadc/canfar-portal` | Public CANFAR website and links to services | Landing-page/service navigation; it is not the current Science Portal Session UI |
 
-AstroAI repositories add optional images and tools on top of the platform. They
-must be labelled as deployment extensions, not OpenCADC core capabilities.
-
 ## Evidence order
 
 The code is the behavioral source of truth. Use the narrowest evidence that

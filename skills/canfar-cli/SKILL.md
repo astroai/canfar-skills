@@ -91,7 +91,6 @@ Session ID, Storage Identifier, or another explicit field.
 | `canfar` | Authentication, Server Selection, Sessions, images, VOSpace data |
 | `vcp` / Python `vos` | Legacy CADC VOSpace workflows |
 | `cadcget` / `cadctap` | CADC archives and TAP services |
-| `astroai` | Optional AstroAI image extension, not OpenCADC core |
 
 ## Agent rules
 

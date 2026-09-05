@@ -1,6 +1,6 @@
 {
   "name": "canfar-skills",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "CANFAR Science Platform skills for agents \u2014 all deployments, plain-language routing.",
   "skills": [
     {
@@ -156,27 +156,6 @@
       "title": "Troubleshooting",
       "summary": "Common failures and diagnostics.",
       "category": "platform"
-    },
-    {
-      "id": "astroai-ray",
-      "path": "skills/astroai-ray",
-      "title": "Ray compute (AstroAI)",
-      "summary": "Ray cluster and jobs via astroai.",
-      "category": "platform"
-    },
-    {
-      "id": "astroai-lab-workflow",
-      "path": "skills/astroai-lab-workflow",
-      "title": "AstroAI lab workflow",
-      "summary": "Session workflow: pixi/uv, save/resume, Ray, agents.",
-      "category": "platform"
-    },
-    {
-      "id": "ml-experimentation",
-      "path": "skills/ml-experimentation",
-      "title": "ML experimentation router",
-      "summary": "Plain-language router for Probabl / skore ML skills.",
-      "category": "ml"
     }
   ],
   "workflows": [
@@ -206,10 +185,7 @@
         "canfar-cvmfs",
         "canfar-best-practices",
         "canfar-concurrency",
-        "canfar-troubleshooting",
-        "astroai-ray",
-        "astroai-lab-workflow",
-        "ml-experimentation"
+        "canfar-troubleshooting"
       ]
     }
   ]

@@ -95,11 +95,12 @@ the exact `vchmod` syntax for group/public permissions; verify with `vls -l`.
 
 ```bash
 canfar data cp local:/absolute/path/file.fits arc:/projects/mygroup/incoming/file.fits
-# Legacy CADC form when vostools is required:
-vcp file.fits vos:/arc:projects/mygroup/incoming/
+# Legacy vostools: scheme vos: is Vault. ARC uses the arc: shortcut or vos:// form:
+vcp file.fits arc:/projects/mygroup/incoming/
+# vcp file.fits vos://cadc.nrc.ca~arc/projects/mygroup/incoming/
 ```
 
-POSIX path `/arc/projects/mygroup/` and VOSpace view of same allocation.
+CADC POSIX path `/arc/projects/mygroup/` and the VOSpace view of the same allocation.
 
 ## Large transfers
 

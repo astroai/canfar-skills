@@ -79,7 +79,6 @@ allocation.
 | Scale-out pipelines, batch-friendly code | `canfar-best-practices` |
 | Shared home/project storage, concurrent sessions | `canfar-concurrency` |
 | Failures, pending sessions, lost files | `canfar-troubleshooting` |
-| **AstroAI only:** Ray cluster, `astroai run` | `astroai-ray` |
 
 If storage + quota both apply: `canfar-storage` then `canfar-quotas`.
 
@@ -90,7 +89,7 @@ If storage + quota both apply: `canfar-storage` then `canfar-quotas`.
 | Session scratch | `/scratch` | Session | **No** |
 | Personal persistent storage | `/arc/home/<you>` | Deployment-managed | **Yes** |
 | Team persistent storage | `/arc/projects/<group>` | Project allocation | **Yes** (group) |
-| VOSpace service | `vault:` or legacy `vos:` | Service policy | Per VOSpace ACLs |
+| VOSpace service | `arc:`, `vault:`, or legacy `vos:` | Service policy | Per VOSpace ACLs |
 
 The Skaha chart calls the persistent POSIX service **Cavern** and defaults its
 mount to `/cavern`; CADC deploys the corresponding service as ARC at `/arc`.
@@ -99,13 +98,11 @@ Use the site's names and paths rather than translating them blindly.
 ```bash
 canfar ps
 canfar auth show
-df -h /arc/home/$USER /arc/projects/<group> 2>/dev/null
+df -h /arc/home/$USER /arc/projects/<group> 2>/dev/null   # CADC; substitute site mounts
 ```
 
 Public guide (orientation):
 [www.opencadc.org/canfar](https://www.opencadc.org/canfar/latest/)
-
-On **AstroAI** images also: `astroai status --json` · `less /opt/astroai/USAGE.md`
 
 ## Install / update
 
